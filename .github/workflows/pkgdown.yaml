@@ -7,6 +7,14 @@ on:
 
 name: pkgdown
 
+# Opt every JavaScript action into Node 24 ahead of GitHub's June 2026
+# default switch. The r-lib/* and actions/* runners still ship a Node 20
+# manifest at the time of writing; this flag tells the runner to execute
+# them on Node 24 anyway. Once those actions publish a Node-24 manifest
+# this env can be removed.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 # Permissions for the modern GitHub Pages deployment flow:
 # read source, write pages artifact, request OIDC token for deploy.
 permissions:

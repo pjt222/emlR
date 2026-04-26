@@ -6,6 +6,12 @@ on:
 
 name: R-CMD-check
 
+# Opt every JavaScript action into Node 24 ahead of GitHub's June 2026
+# default switch. Remove once r-lib/actions and actions/* publish a
+# Node-24 manifest.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions: read-all
 
 jobs:

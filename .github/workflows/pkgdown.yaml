@@ -7,12 +7,22 @@ on:
 
 name: pkgdown
 
+# Permissions for the modern GitHub Pages deployment flow:
+# read source, write pages artifact, request OIDC token for deploy.
 permissions:
-  contents: write
+  contents: read
   pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, but do not cancel in-progress
+# deploys — we want the latest commit's build to complete and publish
+# even if it queued behind an earlier one.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  pkgdown:
+  build:
     runs-on: ubuntu-latest
 
     env:
@@ -36,10 +46,20 @@ jobs:
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
-      - name: Deploy to GitHub Pages
-        if: github.event_name != 'pull_request'
-        uses: JamesIves/github-pages-deploy-action@v4
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
         with:
-          clean: false
-          branch: gh-pages
-          folder: docs
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

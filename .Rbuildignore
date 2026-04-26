@@ -1,0 +1,16 @@
+^renv$
+^renv\.lock$
+^\.Rprofile$
+^CLAUDE\.md$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github$
+^LICENSE\.md$
+^reference$
+^.*\.Rcheck$
+^emlR_.*\.tar\.gz$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.git$
+^\.gitignore$

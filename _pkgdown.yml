@@ -1,0 +1,137 @@
+url: https://pjt222.github.io/emlR/
+
+development:
+  mode: auto
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#0054AD"
+    base_font: {google: "Source Sans Pro"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  title: "emlR — All elementary functions from a single binary operator"
+  description: >
+    R implementation of the EML (Exp-Minus-Log) Sheffer operator from
+    Odrzywołek (2026), arXiv:2603.21852. Symbolic manipulation, peephole
+    simplifier, vectorised bytecode evaluator, and L-BFGS-B fitter for
+    symbolic regression.
+  links:
+    - text: Read the paper (arXiv:2603.21852)
+      href: https://arxiv.org/abs/2603.21852
+    - text: Author's reference (Mathematica + Rust)
+      href: https://github.com/VA00/SymbolicRegressionPackage
+    - text: Lean 4 verification
+      href: https://github.com/tomdif/eml-lean
+    - text: Pure-Rust implementation
+      href: https://github.com/cool-japan/oxieml
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    intro:
+      text: Get started
+      href: articles/intro.html
+    github:
+      icon: fa-github
+      href: https://github.com/pjt222/emlR
+
+reference:
+  - title: The operator
+    desc: The single binary operator at the heart of the package.
+    contents:
+      - eml
+      - eml_real
+
+  - title: Constructors
+    desc: Build EML expressions as native R `call` objects.
+    contents:
+      - eml_const
+      - eml_var
+      - eml_node
+      - E
+      - as_eml_expr
+
+  - title: Predicates
+    desc: Type checks for EML expressions.
+    contents:
+      - is_eml_expr
+      - is_eml_call
+      - is_eml_const
+      - is_eml_var
+
+  - title: Inspection
+    desc: Structural metrics on EML expressions.
+    contents:
+      - eml_K
+      - eml_nodecount
+      - eml_leafcount
+      - eml_depth
+      - eml_rpn
+
+  - title: Evaluation
+    desc: Two evaluators — `eml_eval` for one-off, bytecode for vectorised hot paths.
+    contents:
+      - eml_eval
+      - compile_eml
+      - run_bytecode
+
+  - title: Simplification
+    desc: Two-mode rewriter — stays in EML, or collapses to base R primitives.
+    contents:
+      - simplify_eml
+      - simplify_native
+      - match_eml
+
+  - title: Identity catalog
+    desc: Canonical EML expressions for every elementary primitive.
+    contents:
+      - tree_identities
+      - eml_catalog
+      - verify_catalog
+
+  - title: Master formula and symbolic regression
+    desc: >
+      Depth-n parameterised expression with L-BFGS-B fitter and analytic
+      gradients via `Deriv`. Recovers closed-form expressions from data.
+    contents:
+      - build_master
+      - master_n_params
+      - unpack_master_params
+      - snap_master_params
+      - theta_for_exp
+      - theta_for_log
+      - eml_fit
+
+  - title: Compatibility shim (legacy v1 names)
+    desc: >
+      Deprecated entry points retained so prototype code from the
+      pre-package era still runs. New code should not use these.
+    contents:
+      - as_eml_tree
+      - eml_eval_real
+      - ONE
+      - eml_master_eval
+      - eml_master_n_params
+      - theta_for_ln
+      - eml_tree
+      - unpack_theta
+
+  - title: Package
+    contents:
+      - emlR-package
+
+articles:
+  - title: Get started
+    navbar: ~
+    contents:
+      - intro
+
+  - title: Internals and applications
+    navbar: ~
+    contents:
+      - symbolic-regression
+      - bytecode

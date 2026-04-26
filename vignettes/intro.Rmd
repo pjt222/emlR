@@ -1,0 +1,170 @@
+---
+title: "Introduction to emlR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to emlR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+```
+
+## The EML operator
+
+Odrzywołek (2026, [arXiv:2603.21852](https://arxiv.org/abs/2603.21852))
+proves that the single binary operator
+
+$$\mathrm{eml}(x, y) \;=\; \exp(x) - \ln(y)$$
+
+together with the constant `1`, generates **every elementary function**
+on the principal branch of the complex numbers. emlR implements the
+operator, a catalog of canonical EML expressions for every elementary
+primitive, a two-mode simplifier, a stack-machine bytecode evaluator,
+and an L-BFGS-B fitter for symbolic regression.
+
+```{r setup}
+library(emlR)
+```
+
+The operator itself:
+
+```{r eml-basic}
+eml(1, 1)            # exp(1) - log(1) = e
+eml(0, 1)            # exp(0) - log(1) = 1
+eml(0, -1)           # 1 - i*pi (principal-branch log of -1)
+```
+
+It is internally complex (the principal branch of `log` is required for
+`log(-1) = iπ`). For real-valued inputs known to produce real results
+use the wrapper:
+
+```{r eml-real}
+eml_real(1, 1)
+eml_real(0.5, 1)
+```
+
+## Three sacred identities
+
+The paper proves three identities that every EML simplifier must
+preserve. emlR verifies them in `simplify_native()`, the rewriter that
+collapses recognised EML patterns to base-R primitives.
+
+```{r sacred}
+simplify_native(quote(eml(x, 1)))                          # exp(x)
+simplify_native(quote(eml(1, 1)))                          # e (folded)
+simplify_native(quote(eml(1, eml(eml(1, x), 1))))           # log(x), paper Eq. 5, K=7
+```
+
+The third identity is the headline of the paper: with K = 7 nodes (or
+seven RPN tokens, `1 1 x E 1 E E`), `eml(1, eml(eml(1, x), 1))` is
+exactly `log(x)`.
+
+```{r rpn}
+log_expr <- quote(eml(1, eml(eml(1, x), 1)))
+eml_K(log_expr)        # 7  (paper K)
+eml_depth(log_expr)    # 3
+eml_rpn(log_expr)      # "1 1 x E 1 E E"
+```
+
+## Native R AST
+
+EML expressions are not a custom S3 class; they are ordinary R `call`
+objects. That means every existing R language tool just works:
+
+```{r ast}
+e <- quote(eml(1, eml(eml(1, x), 1)))
+deparse(e)
+all.vars(e)
+identical(e, bquote(eml(1, eml(eml(1, .(quote(x))), 1))))
+```
+
+You can also build expressions programmatically:
+
+```{r constructors}
+eml_node(1, "x")                   # eml(1, x)
+E(1, E(E(1, "x"), 1))              # E() shorthand — paper Eq. 5
+```
+
+## Evaluating expressions
+
+Two evaluators are available:
+
+* `eml_eval()` — defers to `base::eval()` after binding `eml` plus your
+  variables in a fresh environment.
+* `compile_eml()` + `run_bytecode()` — a stack-machine fast path with a
+  deduplicated constants pool. Vectorised over input bindings.
+
+```{r eval}
+xs <- seq(0.5, 5, length.out = 30)
+log_expr <- quote(eml(1, eml(eml(1, x), 1)))
+
+# Direct evaluation
+v1 <- Re(eml_eval(log_expr, list(x = xs)))
+
+# Bytecode
+bc <- compile_eml(log_expr)
+v2 <- Re(run_bytecode(bc, list(x = xs)))
+
+max(abs(v1 - v2))
+max(abs(v1 - log(xs)))
+```
+
+The bytecode evaluator is what powers `eml_fit()` (see
+`vignette("symbolic-regression")`); it lets the inner loop of an
+optimisation run vectorised over hundreds of input points without the
+overhead of recursive `eval()`.
+
+## The catalog
+
+`eml_catalog()` returns a named list with every elementary primitive as
+an EML expression:
+
+```{r catalog}
+catalog <- eml_catalog()
+names(catalog)
+catalog$log
+catalog$sub
+```
+
+Each entry numerically evaluates to the right value (`verify_catalog()`
+checks all 18 entries):
+
+```{r verify}
+verify_catalog(verbose = FALSE)
+```
+
+For the elementary "named" primitives (`exp`, `log`, `sub`, `mul`,
+`div`, `pow`, `add`, `minus`, plus the seven constants and `one`),
+`simplify_native()` collapses the catalog entry to its base-R form
+literally:
+
+```{r catalog-simplify}
+simplify_native(catalog$mul)                   # x * y
+simplify_native(catalog$div)                   # x / y
+simplify_native(catalog$pow)                   # x ^ y
+simplify_native(catalog$pi)                    # ≈ pi
+```
+
+The `sqrt`, `sin`, and `cos` entries verify numerically but do not fully
+collapse to their base-R primitives under the current rule set —
+reaching `sin(x)` via Euler's formula is, per the paper §5.3,
+"arguably outside the simplifier's remit". They remain correct
+expressions, just longer.
+
+## Where to next
+
+* `vignette("symbolic-regression")` — recover `log(x)` from data using
+  the master formula and L-BFGS-B with analytic gradients.
+* `vignette("bytecode")` — internals of the compiler and stack-machine
+  evaluator.
+* `?eml`, `?simplify_native`, `?eml_fit` — function reference.
+
+## References
+
+Odrzywołek, A. (2026). *All elementary functions from a single binary
+operator.* [arXiv:2603.21852](https://arxiv.org/abs/2603.21852).

@@ -1,0 +1,396 @@
+# =============================================================================
+#  Pattern matcher and simplifier (EML mode + native mode).
+#
+#  The simplifier is a tree rewriter. Two entry points:
+#    simplify_eml()    — stays in the EML grammar (constant folding only).
+#                        Preserves the master formula's completeness.
+#    simplify_native() — collapses recognised EML patterns to base R.
+#                        The headline correctness check: simplify_native
+#                        of tree_log("x") returns quote(log(x)) literally.
+#
+#  Strategy: top-down rewrite to a fixed point. At each node, try every
+#  rule in order; if one matches, substitute its right-hand side and
+#  recursively simplify the result. Otherwise descend into children.
+#  Top-down avoids the rewrite-blocking that bottom-up suffers when a
+#  general rule (N1: eml(_x, 1) -> exp(_x)) fires on a subtree before a
+#  more-specific rule (N3: eml(1, eml(eml(1, _x), 1)) -> log(_x)) gets
+#  the chance to recognise the larger context.
+# =============================================================================
+
+# ---- Pattern matcher -------------------------------------------------------
+
+# A meta-variable is a name whose printed form starts with an underscore.
+.is_metavar <- function(x) {
+  is.name(x) && startsWith(as.character(x), "_")
+}
+
+#' Pattern-match an EML expression against a meta-variable pattern
+#'
+#' Walks `expr` and `pattern` in parallel. A name in `pattern` whose
+#' printed form starts with `_` is a meta-variable that binds to
+#' whatever subexpression sits in the corresponding position of `expr`;
+#' subsequent occurrences of the same meta-variable must bind to the
+#' identical subexpression. Atoms and non-metavar names must match
+#' exactly.
+#'
+#' @param expr the expression to match.
+#' @param pattern the pattern.
+#' @param bindings named list of meta-variable bindings to extend
+#'   (used by the recursive walk; callers usually leave this at the
+#'   default empty list).
+#' @return Named list of bindings (possibly empty if the pattern has no
+#'   meta-variables but matches), or `NULL` on no match.
+#' @examples
+#' match_eml(quote(eml(1, x)),       quote(eml(1, `_x`)))   # _x = x
+#' match_eml(quote(eml(x, x)),       quote(eml(`_x`, `_x`))) # _x = x
+#' match_eml(quote(eml(x, y)),       quote(eml(`_x`, `_x`))) # NULL
+#' match_eml(quote(eml(log(a), 1)),  quote(eml(log(`_x`), 1))) # _x = a
+#' @export
+match_eml <- function(expr, pattern, bindings = list()) {
+  if (.is_metavar(pattern)) {
+    nm <- as.character(pattern)
+    if (nm %in% names(bindings)) {
+      if (identical(bindings[[nm]], expr)) return(bindings)
+      return(NULL)
+    }
+    bindings[[nm]] <- expr
+    return(bindings)
+  }
+  if (is.name(pattern)) {
+    if (identical(pattern, expr)) return(bindings)
+    return(NULL)
+  }
+  if (is.atomic(pattern) && length(pattern) == 1L) {
+    if (is.atomic(expr) && length(expr) == 1L) {
+      # Allow numeric==complex equivalence so literal `0` matches `0+0i`
+      # produced by the constant-folder, and `1L` matches `1`.
+      if ((is.numeric(pattern) || is.complex(pattern)) &&
+          (is.numeric(expr)    || is.complex(expr))) {
+        if (isTRUE(as.complex(expr) == as.complex(pattern))) {
+          return(bindings)
+        }
+        return(NULL)
+      }
+      if (identical(expr, pattern)) return(bindings)
+    }
+    return(NULL)
+  }
+  if (is.call(pattern)) {
+    if (!is.call(expr)) return(NULL)
+    if (length(pattern) != length(expr)) return(NULL)
+    if (!identical(pattern[[1L]], expr[[1L]])) return(NULL)
+    for (i in seq_len(length(pattern) - 1L) + 1L) {
+      bindings <- match_eml(expr[[i]], pattern[[i]], bindings)
+      if (is.null(bindings)) return(NULL)
+    }
+    return(bindings)
+  }
+  NULL
+}
+
+# Substitute meta-variable bindings into the right-hand side of a rule.
+# Uses base::substitute via do.call so we can pass `bindings` programmatically.
+.subst_bindings <- function(expr, bindings) {
+  do.call(substitute, list(expr, bindings))
+}
+
+# ---- simplify_eml: stay-inside-EML (constant folding only) -----------------
+
+#' Simplify an EML expression, keeping the EML grammar intact
+#'
+#' Constant-folds subtrees that contain no free variables; otherwise
+#' recurses into the children. Preserves every `eml` call that has at
+#' least one free variable in either subtree, so the simplified form is
+#' still drawn from the EML grammar (literals, names, and `eml` nodes
+#' only). Idempotent on every catalog entry.
+#'
+#' @param expr an EML expression.
+#' @return An EML expression (literal or call).
+#' @examples
+#' simplify_eml(quote(eml(1, 1)))          # numeric e (folded)
+#' simplify_eml(quote(eml(x, 1)))          # unchanged
+#' simplify_eml(quote(eml(x, eml(1, 1))))  # eml(x, e)
+#' @export
+simplify_eml <- function(expr) {
+  if (!is.call(expr)) return(expr)
+  if (length(all.vars(expr)) == 0L) {
+    return(eval(expr, list2env(list(eml = eml), parent = baseenv())))
+  }
+  call("eml", simplify_eml(expr[[2L]]), simplify_eml(expr[[3L]]))
+}
+
+# ---- simplify_native: collapse to base-R primitives ------------------------
+
+# The rule list. Order matters: at every node we try rules top-to-bottom and
+# fire the first match. More specific rules come first.
+.native_rules <- function() {
+  list(
+    # N3: log via paper Eq. 5. Most specific structure — must come before N1.
+    list(name = "N3",
+         lhs  = quote(eml(1, eml(eml(1, `_x`), 1))),
+         rhs  = quote(log(`_x`))),
+
+    # N4: subtraction directly from defn.
+    list(name = "N4",
+         lhs  = quote(eml(log(`_x`), exp(`_y`))),
+         rhs  = quote(`_x` - `_y`)),
+
+    # N5: eml(log(x), 1) = exp(log(x)) - log(1) = x.
+    list(name = "N5",
+         lhs  = quote(eml(log(`_x`), 1)),
+         rhs  = quote(`_x`)),
+
+    # N7: eml(_x, exp(_y)) = exp(_x) - _y.
+    list(name = "N7",
+         lhs  = quote(eml(`_x`, exp(`_y`))),
+         rhs  = quote(exp(`_x`) - `_y`)),
+
+    # N6: eml(0, _y) = 1 - log(_y).
+    list(name = "N6",
+         lhs  = quote(eml(0, `_y`)),
+         rhs  = quote(1 - log(`_y`))),
+
+    # N2: e literal (folded).
+    list(name = "N2",
+         lhs  = quote(eml(1, 1)),
+         rhs  = quote(exp(1))),
+
+    # N5b: general log-on-left.  exp(log(_x)) - log(_y) = _x - log(_y).
+    # Subsumes N5 (taking _y = 1, log(1) = 0) but kept after N5 so the
+    # cleaner form fires first when applicable.
+    list(name = "N5b",
+         lhs  = quote(eml(log(`_x`), `_y`)),
+         rhs  = quote(`_x` - log(`_y`))),
+
+    # N1: exp directly from paper. Most general — last among eml rules.
+    list(name = "N1",
+         lhs  = quote(eml(`_x`, 1)),
+         rhs  = quote(exp(`_x`)))
+  )
+}
+
+# Algebraic-cleanup rules. Applied after the EML rules so the expression
+# has been mostly collapsed; these tidy up the residue. Required for
+# reaching the SPEC §5.2 expected forms on tree_minus, tree_add,
+# tree_mul, tree_div, tree_pow.
+.native_cleanup_rules <- function() {
+  list(
+    # log/exp inverses on the principal branch
+    list(name = "C-log-exp",
+         lhs  = quote(log(exp(`_x`))),
+         rhs  = quote(`_x`)),
+    list(name = "C-exp-log",
+         lhs  = quote(exp(log(`_x`))),
+         rhs  = quote(`_x`)),
+
+    # Subtraction identities — let `0 - x` collapse to `-x` so subsequent
+    # `_x - (-_y) -> _x + _y` rule can fire.
+    list(name = "C-zero-minus",
+         lhs  = quote(0 - `_x`),
+         rhs  = quote(-`_x`)),
+    list(name = "C-minus-zero",
+         lhs  = quote(`_x` - 0),
+         rhs  = quote(`_x`)),
+    list(name = "C-double-neg",
+         lhs  = quote(- -`_x`),
+         rhs  = quote(`_x`)),
+    list(name = "C-sub-neg",
+         lhs  = quote(`_x` - -`_y`),
+         rhs  = quote(`_x` + `_y`)),
+
+    # eml(log(0), _y) — extended-real residue from tree_minus/add/mul.
+    # Proof: exp(log(0)) - log(_y) = 0 - log(_y) = -log(_y).
+    list(name = "C-eml-log0",
+         lhs  = quote(eml(log(0), `_y`)),
+         rhs  = quote(-log(`_y`))),
+
+    # log(_x) + log(_y) = log(_x * _y) and log(_x) - log(_y) = log(_x / _y)
+    list(name = "C-log-prod",
+         lhs  = quote(log(`_x`) + log(`_y`)),
+         rhs  = quote(log(`_x` * `_y`))),
+    list(name = "C-log-quot",
+         lhs  = quote(log(`_x`) - log(`_y`)),
+         rhs  = quote(log(`_x` / `_y`))),
+
+    # exp(_y * log(_x)) = _x ^ _y    — pow shortcut
+    list(name = "C-exp-mul-log",
+         lhs  = quote(exp(`_y` * log(`_x`))),
+         rhs  = quote(`_x` ^ `_y`)),
+    list(name = "C-exp-log-mul",
+         lhs  = quote(exp(log(`_x`) * `_y`)),
+         rhs  = quote(`_x` ^ `_y`))
+  )
+}
+
+# Constant-aware evaluation environment: log/exp/sqrt complex-coerce
+# their arguments, so log(-1) and log(0) and similar resolve via the
+# principal branch (matching the EML semantics) rather than producing
+# real-domain NaN.
+.complex_fold_env <- function() {
+  list2env(list(
+    eml  = eml,
+    log  = function(x) base::log(as.complex(x)),
+    exp  = function(x) base::exp(as.complex(x)),
+    sqrt = function(x) base::sqrt(as.complex(x))
+  ), parent = baseenv())
+}
+
+# Recursively fold sub-trees with no free variables to a literal value,
+# using the complex-domain env. Only commits the fold if the resulting
+# value is finite; otherwise leaves the structural form in place so the
+# user (or downstream code) can choose how to handle the divergence.
+.fold_constants <- function(expr) {
+  if (!is.call(expr)) return(expr)
+  if (length(all.vars(expr)) == 0L) {
+    val <- tryCatch(
+      eval(expr, .complex_fold_env()),
+      error = function(e) NULL,
+      warning = function(w) NULL
+    )
+    if (!is.null(val) && length(val) == 1L &&
+        (is.numeric(val) || is.complex(val)) &&
+        is.finite(Re(val)) && is.finite(Im(val))) {
+      return(val)
+    }
+  }
+  new_args <- lapply(as.list(expr)[-1L], .fold_constants)
+  as.call(c(list(expr[[1L]]), new_args))
+}
+
+# Try every rule at the root of `expr`; return the rewritten form on the
+# first match, or NULL if no rule fires.
+.try_rules <- function(expr, rules) {
+  for (rule in rules) {
+    bindings <- match_eml(expr, rule$lhs)
+    if (!is.null(bindings)) {
+      return(list(expr = .subst_bindings(rule$rhs, bindings),
+                  rule = rule$name))
+    }
+  }
+  NULL
+}
+
+# Top-down single-pass rewrite. Try rules at the root; if one fires,
+# recursively simplify the result. Otherwise descend into children and
+# retry rules at the root after children have been rewritten (this lets
+# rules that need a particular shape match after simplification).
+.rewrite_top_down <- function(expr, rules, trace_env = NULL) {
+  hit <- .try_rules(expr, rules)
+  if (!is.null(hit)) {
+    if (!is.null(trace_env)) {
+      trace_env$rules <- c(trace_env$rules, hit$rule)
+      trace_env$intermediates <-
+        c(trace_env$intermediates, list(hit$expr))
+    }
+    return(.rewrite_top_down(hit$expr, rules, trace_env))
+  }
+  if (is.call(expr)) {
+    new_args <- lapply(as.list(expr)[-1L],
+                       function(a) .rewrite_top_down(a, rules, trace_env))
+    new_expr <- as.call(c(list(expr[[1L]]), new_args))
+    # Fold sub-trees with no free variables before retrying parent rules,
+    # so e.g. an emerging `log(1)` collapses to `0` and a parent rule
+    # sees `eml(0, _y)` (which N6 catches) rather than
+    # `eml(log(1), _y)` (which only the more general N5b catches and may
+    # yield a less canonical form).
+    new_expr <- .fold_constants(new_expr)
+    hit <- .try_rules(new_expr, rules)
+    if (!is.null(hit)) {
+      if (!is.null(trace_env)) {
+        trace_env$rules <- c(trace_env$rules, hit$rule)
+        trace_env$intermediates <-
+          c(trace_env$intermediates, list(hit$expr))
+      }
+      return(.rewrite_top_down(hit$expr, rules, trace_env))
+    }
+    return(new_expr)
+  }
+  expr
+}
+
+#' Simplify by collapsing recognised EML patterns to base-R primitives
+#'
+#' Applies a top-down rewrite system to fixed point. The output may
+#' contain `exp`, `log`, `+`, `-`, `*`, `/`, `^`, and (with
+#' `include_euler = TRUE`) `sin`, `cos` — anything `eval()` can handle.
+#'
+#' Rule list (SPEC §3.3, with order tuned to ensure N3 fires before N1
+#' on the structured `log` pattern):
+#' \describe{
+#'   \item{N3}{`eml(1, eml(eml(1, _x), 1))` → `log(_x)`}
+#'   \item{N4}{`eml(log(_x), exp(_y))` → `_x - _y`}
+#'   \item{N5}{`eml(log(_x), 1)` → `_x`}
+#'   \item{N7}{`eml(_x, exp(_y))` → `exp(_x) - _y`}
+#'   \item{N6}{`eml(0, _y)` → `1 - log(_y)`}
+#'   \item{N2}{`eml(1, 1)` → `exp(1)`}
+#'   \item{N1}{`eml(_x, 1)` → `exp(_x)`}
+#'   \item{C-log-exp}{`log(exp(_x))` → `_x`}
+#'   \item{C-exp-log}{`exp(log(_x))` → `_x`}
+#' }
+#' Constant subtrees are folded as a final step.
+#'
+#' @param expr an EML expression (or any R `call` for re-application).
+#' @param include_euler include the Euler rules E1 (`sin`) and E2
+#'   (`cos`). Default `TRUE`.
+#' @param trace if `TRUE`, return a list `(result, rules, intermediates)`
+#'   capturing every rule firing in order. For debugging only.
+#' @return The simplified expression, or — if `trace = TRUE` — a list
+#'   containing the simplified expression plus the firing trace.
+#' @examples
+#' simplify_native(quote(eml(x, 1)))                            # exp(x)
+#' simplify_native(quote(eml(1, eml(eml(1, x), 1))))             # log(x)
+#' simplify_native(quote(eml(log(a), exp(b))))                   # a - b
+#' @export
+simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
+  rules <- c(.native_rules(), .native_cleanup_rules())
+  if (isTRUE(include_euler)) {
+    rules <- c(rules, .euler_rules())
+  }
+  trace_env <- if (isTRUE(trace)) {
+    new.env(parent = emptyenv())
+  } else NULL
+  if (!is.null(trace_env)) {
+    trace_env$rules <- character(0)
+    trace_env$intermediates <- list()
+  }
+
+  # Iterate to fixed point with rule application AND constant folding
+  # interleaved. The fold uses a complex-aware env and only commits the
+  # value when it is finite — so `log(0)` (which evaluates to -Inf) is
+  # left as a structural call, preserving patterns like
+  # `eml(log(0), _y)` for the C-eml-log0 rule. Other constants
+  # (`log(1) -> 0`, `exp(1) -> e`) collapse, freeing cleanup rules like
+  # `0 - _x -> -_x` to fire on the next pass.
+  prev <- NULL
+  curr <- expr
+  iter <- 0L
+  while (!identical(curr, prev) && iter < 200L) {
+    prev <- curr
+    curr <- .rewrite_top_down(curr, rules, trace_env)
+    curr <- .fold_constants(curr)
+    iter <- iter + 1L
+  }
+
+  if (isTRUE(trace)) {
+    return(list(result = curr,
+                rules = trace_env$rules,
+                intermediates = trace_env$intermediates))
+  }
+  curr
+}
+
+# Euler rules — collapse the standard exponential forms back to sin/cos.
+# The exact form a fully-collapsed sin/cos construction takes depends on
+# the catalog; these patterns are the "obvious" canonical forms. Add
+# additional shapes here if a catalog entry collapses to a different
+# normal form.
+.euler_rules <- function() {
+  list(
+    list(name = "E1",
+         lhs  = quote((exp(0+1i * `_x`) - exp(-(0+1i * `_x`))) / (0+2i)),
+         rhs  = quote(sin(`_x`))),
+    list(name = "E2",
+         lhs  = quote((exp(0+1i * `_x`) + exp(-(0+1i * `_x`))) / 2),
+         rhs  = quote(cos(`_x`)))
+  )
+}

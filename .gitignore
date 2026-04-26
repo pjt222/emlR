@@ -1,0 +1,33 @@
+# R
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rcheck
+*.tar.gz
+.httr-oauth
+
+# Build outputs
+docs/
+inst/doc/
+
+# renv: keep renv.lock, ignore the local library cache
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/staging/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# CI artifacts
+*.pdf
+
+# Direnv / local env
+.envrc
+.env

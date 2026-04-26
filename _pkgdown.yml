@@ -1,7 +1,10 @@
 url: https://pjt222.github.io/emlR/
 
 development:
-  mode: auto
+  # `release` writes to docs/ (single site). `auto` would split into
+  # docs/ vs docs/dev/ based on version, but that only makes sense
+  # once a stable CRAN release exists. Switch to `auto` post-0.1.0.
+  mode: release
 
 template:
   bootstrap: 5

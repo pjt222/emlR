@@ -31,3 +31,7 @@ Thumbs.db
 # Direnv / local env
 .envrc
 .env
+
+# Claude Code per-user settings (CLAUDE.md is committed)
+.claude/settings.local.json
+.claude/.runs

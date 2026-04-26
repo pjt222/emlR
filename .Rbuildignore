@@ -1,7 +1,7 @@
 ^renv$
 ^renv\.lock$
 ^\.Rprofile$
-^CLAUDE\.md$
+^\.claude$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.github$

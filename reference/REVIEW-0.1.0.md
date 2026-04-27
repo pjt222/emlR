@@ -50,13 +50,15 @@
 
 ## Executive summary
 
-| Severity | Count | What it means |
-|---|---|---|
-| Blocker | 4 | Must fix before CRAN submission |
-| High | 11 | Should fix before CRAN; reviewer NOTEs likely |
-| Medium | 7 | Post-0.1.0 acceptable, but trivial enough to fold in |
-| Low | 2 | Nice-to-have |
-| Won't-fix | 4 | Documented out-of-scope |
+| Severity | Count | Issues | What it means |
+|---|---|---|---|
+| Blocker | 4 | [#1–#4](https://github.com/pjt222/emlR/issues?q=is%3Aissue+label%3A%22severity%3Ablocker%22) | Must fix before CRAN submission |
+| High | 11 | [#5–#15](https://github.com/pjt222/emlR/issues?q=is%3Aissue+label%3A%22severity%3Ahigh%22) | Should fix before CRAN; reviewer NOTEs likely |
+| Medium | 8 | [#16–#23](https://github.com/pjt222/emlR/issues?q=is%3Aissue+label%3A%22severity%3Amedium%22) | Post-0.1.0 acceptable, but trivial enough to fold in |
+| Low | 2 | [#24–#25](https://github.com/pjt222/emlR/issues?q=is%3Aissue+label%3A%22severity%3Alow%22) | Nice-to-have |
+| Won't-fix | 4 | — | Documented out-of-scope |
+
+**Tracking**: every finding has a corresponding GitHub issue under the [0.1.0 milestone](https://github.com/pjt222/emlR/milestone/1) tagged `cran-review` plus the matching severity label.
 
 **Note (post-Phase-2 addendum)**: B-EXEC scope expanded — the same eval-sandbox fix must cover `eml_eval` (`R/05_eval.R:38`) in addition to `.fold_constants`. Live re-verification confirmed `eml_eval(quote(system("…")), list())` also executes the shell command. The blocker count remains 4; the fix surface is wider.
 

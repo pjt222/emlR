@@ -106,6 +106,68 @@ test_that("simplified sqrt, sin, cos still evaluate correctly", {
   }
 })
 
+# --- 4f/F4: numeric eval-equivalence sweep ----------------------------------
+#
+# The structural test above compares deparse strings, which catches a
+# wrong head/shape but is silent on a wrong constant (e.g. exp(2) where
+# exp(1) is expected). This sweeps each catalog entry over multiple
+# numeric points and compares eml_eval(orig) against
+# eval(simplify_native(orig)) under the same bindings. A bug that
+# rewrites the tree to a structurally-correct but numerically-wrong
+# form (e.g. swapping a sub-tree for `e` instead of `1`) would survive
+# the deparse test but fail here.
+#
+# Bindings are chosen for principal-branch safety: log/sqrt domain
+# starts at >= 0, division avoids y = 0, pow uses x > 0.
+
+test_that("simplify_native preserves numeric value across the catalog", {
+  sweep_pts <- list(
+    one     = list(list()),
+    e       = list(list()),
+    zero    = list(list()),
+    neg_one = list(list()),
+    two     = list(list()),
+    i       = list(list()),
+    pi      = list(list()),
+    exp     = lapply(c(-1, 0, 0.5, 1, 2),       function(v) list(x = v)),
+    log     = lapply(c(0.25, 0.5, 1, 2, 5, 10), function(v) list(x = v)),
+    minus   = lapply(c(-3, -0.5, 0, 0.5, 3),    function(v) list(x = v)),
+    add     = list(list(x = 2,  y = 3),  list(x = -1, y = 4),
+                   list(x = 0,  y = 0),  list(x = 0.25, y = 0.75)),
+    sub     = list(list(x = 5,  y = 2),  list(x = -1, y = 4),
+                   list(x = 0,  y = 0),  list(x = 1.5,  y = 0.5)),
+    mul     = list(list(x = 2,  y = 3),  list(x = -1, y = 4),
+                   list(x = 0,  y = 5),  list(x = 0.5,  y = -2)),
+    div     = list(list(x = 6,  y = 2),  list(x = 1,  y = 4),
+                   list(x = -3, y = 0.5), list(x = 0,    y = 7)),
+    pow     = list(list(x = 2,  y = 3),  list(x = 0.5, y = 2),
+                   list(x = 4,  y = 0.5), list(x = 1.5,  y = -1)),
+    sqrt    = lapply(c(0.25, 1, 4, 16, 100),    function(v) list(x = v)),
+    sin     = lapply(c(0, pi / 6, pi / 4, pi / 3, pi / 2, pi),
+                     function(v) list(x = v)),
+    cos     = lapply(c(0, pi / 6, pi / 4, pi / 3, pi / 2, pi),
+                     function(v) list(x = v))
+  )
+
+  catalog <- eml_catalog()
+  for (nm in names(catalog)) {
+    expr <- catalog[[nm]]
+    s    <- simplify_native(expr)
+    for (vars in sweep_pts[[nm]]) {
+      val_eml  <- eml_eval(expr, vars)
+      env      <- list2env(vars, parent = baseenv())
+      val_simp <- as.complex(eval(s, env))
+      expect_equal(
+        as.complex(val_simp), as.complex(val_eml),
+        tolerance = 1e-8,
+        info = sprintf("%s mismatch at vars=%s",
+                       nm, paste(names(vars), unlist(vars),
+                                 sep = "=", collapse = ","))
+      )
+    }
+  }
+})
+
 # --- 4e: the package's headline correctness check ---------------------------
 
 test_that("HEADLINE: simplify_native(tree_ln('x')) is quote(log(x)) literally", {

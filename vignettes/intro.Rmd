@@ -138,23 +138,25 @@ checks all 18 entries):
 verify_catalog(verbose = FALSE)
 ```
 
-For the elementary "named" primitives (`exp`, `log`, `sub`, `mul`,
-`div`, `pow`, `add`, `minus`, plus the seven constants and `one`),
-`simplify_native()` collapses the catalog entry to its base-R form
-literally:
+`simplify_native()` collapses every catalog entry — including the
+trigonometric and root constructions — to its base-R form literally:
 
 ```{r catalog-simplify}
 simplify_native(catalog$mul)                   # x * y
 simplify_native(catalog$div)                   # x / y
 simplify_native(catalog$pow)                   # x ^ y
+simplify_native(catalog$sqrt)                  # x^0.5
+simplify_native(catalog$sin)                   # sin(x)
+simplify_native(catalog$cos)                   # cos(x)
 simplify_native(catalog$pi)                    # ≈ pi
 ```
 
-The `sqrt`, `sin`, and `cos` entries verify numerically but do not fully
-collapse to their base-R primitives under the current rule set —
-reaching `sin(x)` via Euler's formula is, per the paper §5.3,
-"arguably outside the simplifier's remit". They remain correct
-expressions, just longer.
+Reaching `sin(x)` and `cos(x)` requires the cleanup rule
+`exp(_C + log(_x)) → exp(_C) * _x` to absorb numeric constants that
+emerge mid-collapse, plus a small (`1e-12`) tolerance in the matcher
+to absorb the round-off in `tree_i() = exp(log(-1)/2)`. Both are
+applied automatically; see `?simplify_native` and SPEC §5.3 for the
+full mechanism.
 
 ## Where to next
 

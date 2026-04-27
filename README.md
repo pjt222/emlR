@@ -65,18 +65,18 @@ the diagram on every push to `main`.
 <!-- PUTIOR-WORKFLOW-START -->
 ```mermaid
 flowchart LR
-    con_build(["Construct EML AST"])
-    ins_metrics[["Inspect: K, depth, RPN"]]
-    ev_eval[["eml_eval (one-off)"]]
-    bc_compile["compile_eml"]
-    bc_run[["run_bytecode (vectorised)"]]
-    simp_native["simplify_native (collapse to base R)"]
-    cat_catalog(["eml_catalog (18 primitives)"])
-    cat_verify[["verify_catalog"]]
-    mas_build["build_master (depth-n formula)"]
-    mas_data(["Training data (x, y)"])
-    mas_fit["eml_fit (L-BFGS-B + Deriv gradient)"]
-    mas_recover[["Recovered AST (snap to one-hot)"]]
+    con_build([Construct EML AST])
+    ins_metrics[[Inspect: K, depth, RPN]]
+    ev_eval[[eml_eval (one-off)]]
+    bc_compile[compile_eml]
+    bc_run[[run_bytecode (vectorised)]]
+    simp_native[simplify_native (collapse to base R)]
+    cat_catalog([eml_catalog (18 primitives)])
+    cat_verify[[verify_catalog]]
+    mas_build[build_master (depth-n formula)]
+    mas_data([Training data (x, y)])
+    mas_fit[eml_fit (L-BFGS-B + Deriv gradient)]
+    mas_recover[[Recovered AST (snap to one-hot)]]
 
     %% Connections
     con_build --> ins_metrics

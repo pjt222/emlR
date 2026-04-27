@@ -32,13 +32,6 @@ eml_K <- function(expr) {
        paste(class(expr), collapse = "/"), ").")
 }
 
-#' Alias for [eml_K()] — returns total node count.
-#' @inheritParams eml_K
-#' @examples
-#' eml_nodecount(quote(eml(1, eml(eml(1, x), 1))))  # 7
-#' @export
-eml_nodecount <- function(expr) eml_K(expr)
-
 #' Leaf count of an EML expression (v1 semantics)
 #'
 #' Counts only the leaves — literals and variables — exactly as v1's

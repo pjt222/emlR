@@ -82,9 +82,6 @@ test_that("eml_K returns total node count (paper definition)", {
   expect_identical(eml_K(quote(eml(x, 1))), 3L)        # exp, paper
   # log(x): paper Eq. 5, K = 7
   expect_identical(eml_K(quote(eml(1, eml(eml(1, x), 1)))), 7L)
-
-  # Alias
-  expect_identical(eml_nodecount(quote(eml(1, eml(eml(1, x), 1)))), 7L)
 })
 
 test_that("eml_leafcount preserves v1 semantics", {

@@ -70,7 +70,6 @@ reference:
     desc: Structural metrics on EML expressions.
     contents:
       - eml_K
-      - eml_nodecount
       - eml_leafcount
       - eml_depth
       - eml_rpn
@@ -87,7 +86,6 @@ reference:
     contents:
       - simplify_eml
       - simplify_native
-      - match_eml
 
   - title: Identity catalog
     desc: Canonical EML expressions for every elementary primitive.

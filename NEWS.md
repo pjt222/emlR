@@ -35,7 +35,8 @@ generates all elementary functions on the principal branch.
   analytic gradients via `Deriv::Deriv` on the EML-expanded master.
 * Selectors: `theta_for_exp()` (depth 1), `theta_for_log()`
   (depth 3, paper Eq. 5).
-* Pattern matcher `match_eml()` exposed for advanced use.
+* Pattern matcher `match_eml()` available as an internal helper for
+  rule writers; see `R/07_simplify.R` (not exported).
 
 ## Conventions
 

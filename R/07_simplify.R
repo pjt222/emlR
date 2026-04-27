@@ -46,12 +46,8 @@
 #'   silently matched against rule literals.
 #' @return Named list of bindings (possibly empty if the pattern has no
 #'   meta-variables but matches), or `NULL` on no match.
-#' @examples
-#' match_eml(quote(eml(1, x)),       quote(eml(1, `_x`)))   # _x = x
-#' match_eml(quote(eml(x, x)),       quote(eml(`_x`, `_x`))) # _x = x
-#' match_eml(quote(eml(x, y)),       quote(eml(`_x`, `_x`))) # NULL
-#' match_eml(quote(eml(log(a), 1)),  quote(eml(log(`_x`), 1))) # _x = a
-#' @export
+#' @keywords internal
+#' @noRd
 match_eml <- function(expr, pattern, bindings = list(), tol = 0) {
   if (.is_metavar(pattern)) {
     nm <- as.character(pattern)

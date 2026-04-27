@@ -98,18 +98,26 @@ from data alone. We give `eml_fit()` 30 noiseless `(x, log(x))` points,
 parameterise the depth-3 master via per-slot softmax, and run L-BFGS-B
 with analytic gradients via `Deriv::Deriv`.
 
+The vignette deliberately uses a small budget (`n_restarts = 2`,
+`maxit = 200`) so the rendered build stays under CRAN's per-vignette
+time limit. The full reproducibility budget — `n_restarts = 10`,
+`maxit = 1000` — is used by the Phase-5 acceptance gate at
+`tests/testthat/test-master.R` (see `?eml_fit`); set
+`EMLR_RUN_SLOW=true` and run that test to reproduce the paper's
+~94% recovery rate.
+
 ```{r fit}
 set.seed(42)
 xs <- seq(0.5, 5, length.out = 30)
 ys <- log(xs)
 
 fit <- eml_fit(xs, ys,
-               depth          = 3,
+               depth            = 3,
                parameterization = "simplex",
-               method         = "L-BFGS-B",
-               maxit          = 1000,
-               n_restarts     = 10,
-               seed           = 1)
+               method           = "L-BFGS-B",
+               maxit            = 200,
+               n_restarts       = 2,
+               seed             = 1)
 ```
 
 `fit$snap_mse` is the MSE *after* snapping each slot to its argmax

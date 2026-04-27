@@ -54,9 +54,11 @@
 |---|---|---|
 | Blocker | 4 | Must fix before CRAN submission |
 | High | 11 | Should fix before CRAN; reviewer NOTEs likely |
-| Medium | 6 | Post-0.1.0 acceptable, but trivial enough to fold in |
-| Low | 1 | Nice-to-have |
+| Medium | 7 | Post-0.1.0 acceptable, but trivial enough to fold in |
+| Low | 2 | Nice-to-have |
 | Won't-fix | 4 | Documented out-of-scope |
+
+**Note (post-Phase-2 addendum)**: B-EXEC scope expanded — the same eval-sandbox fix must cover `eml_eval` (`R/05_eval.R:38`) in addition to `.fold_constants`. Live re-verification confirmed `eml_eval(quote(system("…")), list())` also executes the shell command. The blocker count remains 4; the fix surface is wider.
 
 **Go/no-go**: NO-GO until the 4 blockers are resolved. Estimated effort: ~1 day of focused work, mostly mechanical edits and one rule guard.
 
@@ -64,23 +66,35 @@
 
 ## Blockers (must fix before CRAN)
 
-### B-EXEC — Arbitrary code execution in `.fold_constants`
+### B-EXEC — Arbitrary code execution across all eval paths
 
-**File**: `R/07_simplify.R:248-254, 277-293`
-**Source**: security-analyst (wave 1) confirmed live; security-validator (Phase 2) verified mitigation.
+**Files**:
+- `R/07_simplify.R:248-254, 277-293` (`.complex_fold_env`, `.fold_constants`)
+- `R/05_eval.R:38` (`eml_eval`)
+
+**Source**: security-analyst (wave 1) confirmed live for `simplify_native`; r-dev-lead (Phase 2 addendum) extended scope; live re-verified for `eml_eval`.
 **Severity**: blocker
 
-`.complex_fold_env()` uses `parent = baseenv()`, so any name not in the explicit override list (`eml`, `log`, `exp`, `sqrt`) resolves through base R — including `system()`, `file()`, `unlink()`. `.fold_constants` then `eval()`s any constant subtree. Empirical reproduction:
+Both eval paths use `parent = baseenv()`, so any name not in the explicit override list (`eml`, `log`, `exp`, `sqrt`) resolves through base R — including `system()`, `file()`, `unlink()`. Empirical reproduction (both paths):
 
 ```r
 simplify_native(quote(eml(system("echo X 1>&2", intern=FALSE), 1)))
 # stderr: X
-# returned AST: 1
+# returned AST: 1   (call removed)
+
+eml_eval(quote(system("echo X 1>&2", intern=FALSE)), list())
+# stderr: X
+# returns: 0+0i
 ```
 
-The shell command actually executes, and the offending call is removed from the AST so the user never sees what happened.
+Additionally, `eml_eval` lacks the `is_eml_expr()` guard that `compile_eml` has at `R/06_compile.R:40-43`, so it silently accepts non-EML calls (e.g. `eml_eval(quote(x+y), list(x=1,y=2))` returns `3+0i` rather than rejecting the input). This is the input-contract asymmetry the code-reviewer flagged.
 
-**Fix**: gate `.fold_constants` to only evaluate calls whose head is in a whitelist (`eml`, `exp`, `log`, `sqrt`, `+`, `-`, `*`, `/`, `^`, `(`, the literal complex-construction primitives), OR add `is_eml_expr()` validation at the top of `simplify_eml`/`simplify_native` mirroring the existing guard in `compile_eml` (`R/06_compile.R:40-43`). The latter is one-line cheap; the former is more robust.
+**Fix** (cover all three locations):
+1. `simplify_eml` and `simplify_native`: add `if (!is_eml_expr(expr)) stop("…: not an EML expression")` at function top.
+2. `eml_eval`: same guard.
+3. `.fold_constants` defence in depth: restrict the eval env to a whitelist (`eml`, `exp`, `log`, `sqrt`, arithmetic), or use `parent = emptyenv()` and inject the operators explicitly.
+
+The first two are one-liners; the third is the deeper mitigation. Bundle into one commit.
 
 ### B-LICENSE — `License: CC BY 4.0` not acceptable for software
 
@@ -254,6 +268,14 @@ Not enforced by `--as-cran` but expected by CRAN reviewers. Should document the 
 
 "all standard elementary functions" — but `tan`, `sinh`, `cosh`, `tanh`, `asin`, `acos`, `atan` are absent. NEWS.md "Scope" section already correctly limits coverage. Fix docstring to match: "EML expressions for the 18 standard elementary functions and constants implemented in this release."
 
+### F4 — Identity tests are structural-only, not semantic
+
+**File**: `tests/testthat/test-identities.R:47-68`
+**Source**: code-reviewer (Phase 2 addendum); advocatus-diaboli (wave 1 finding 3, originally deferred but promoted).
+**Severity**: medium
+
+The test compares `deparse(simplify_native(catalog[[nm]]))` against an expected string. A wrong constant (e.g. `exp(2)` where `exp(1)` is expected) is only caught if it differs in string form. After the structural check, evaluate both the simplified form and `eml_eval` output at one or more numeric points and compare with tolerance. This catches semantic regressions that pass the deparse test.
+
 ### S9 — ORCID URL form
 
 **File**: `DESCRIPTION:6`
@@ -281,6 +303,14 @@ Never tested below R 4.x. No native pipe `|>` found in `R/*.R`, so R 4.0 is defe
 ### S11 — API surface trim
 
 After S1's 8 deletions, 50 exports remain. Further candidates: `match_eml` (DSL-internal), `eml_nodecount` (duplicates `eml_K` for a non-paper metric). Not blocking. Per `sr-sw-dev`'s recommendation, defer to 0.1.1.
+
+### F6 — No sub-second `eml_fit` smoke test
+
+**File**: `tests/testthat/test-master.R`
+**Source**: code-reviewer (Phase 2 addendum).
+**Severity**: low
+
+The Phase-5 convergence gate is gated behind `EMLR_RUN_SLOW=true`. Without it, no test exercises the `eml_fit` machinery end-to-end. A depth-1, n_restarts=1, maxit=10 smoke test runs in milliseconds and proves the fitter is operational — including verifying the S7 fix (presence of `n_restarts_run` in the return list) without needing the slow gate. Add as `test_that("eml_fit returns a structurally complete result on a tiny input", ...)`.
 
 ---
 

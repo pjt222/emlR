@@ -47,15 +47,20 @@ generates all elementary functions on the principal branch.
   `log(x) = eml(1, eml(eml(1, x), 1))`, `eml_K` returns 7.
   See `reference/ADR-001-K-counting.md`.
 
-## Known limitations
+## Simplifier coverage
 
-* `simplify_native()` reaches the SPEC §5.2 expected structural form
-  for 15 of 18 catalog entries. The remaining three — `sqrt`, `sin`,
-  `cos` — evaluate to the correct numeric value (verified by
-  `verify_catalog()`) but retain extra structure. SPEC §5.3 explicitly
-  flags Euler-formula cleanup as "arguably outside the simplifier's
-  remit". These entries are covered by numeric tests rather than
-  structural ones.
+* `simplify_native()` reaches the SPEC §5.2 structural form for **all
+  18 catalog entries**, including `sqrt`, `sin`, and `cos`. Closing
+  the previous gap required two cleanup-layer additions:
+  - rule `C-exp-const-plus-log` (`exp(_C + log(_x)) → exp(_C) * _x`,
+    sound on the principal branch via `exp(a+b) = exp(a)·exp(b)` and
+    `exp(log(z)) = z`),
+  - tolerance-aware atomic equality in the matcher (`|a - b| < 1e-12`)
+    plus an asymmetric snap in `.fold_constants` that zeroes a
+    sub-tolerance component only when the other component is
+    dominantly large. Together these absorb the residual round-off
+    from `tree_i() = exp(log(-1)/2)` (which yields `6.12e-17 + 1i`,
+    not exact `0+1i`).
 
 ## Reference materials
 

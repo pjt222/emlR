@@ -33,6 +33,7 @@ Key entry points:
 Useful links:
 \itemize{
   \item \url{https://github.com/pjt222/emlR}
+  \item \url{https://pjt222.github.io/emlR/}
   \item Report bugs at \url{https://github.com/pjt222/emlR/issues}
 }
 

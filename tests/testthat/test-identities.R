@@ -32,21 +32,19 @@ test_that("simplify_native is idempotent on every catalog entry", {
   }
 })
 
-# --- 4e/T9: §5.2 structural-form check, with documented allowlist -----------
+# --- 4e/T9: §5.2 structural-form check ---------------------------------------
 #
-# Entries that reach the structural form expected by SPEC §5.2 via the
-# rule set N1-N7 + cleanup. The remaining catalog entries (sqrt, sin,
-# cos) evaluate to the correct value but do not collapse to their
-# base-R structural form with the current rule set; SPEC §5.3 flags
-# the Euler-rule cleanup as "arguably outside the simplifier's remit".
-# These are covered by the numeric `verify_catalog` test above.
+# Every catalog entry must collapse to the structural form documented
+# in SPEC §5.2. The Euler entries (sin, cos) and sqrt rely on the
+# C-exp-const-plus-log cleanup rule + tolerance-aware atomic equality
+# to bridge round-off in tree_i() = exp(log(-1)/2).
 
 # Helper: structural equality after deparse normalisation.
 .deparse_norm <- function(e) {
   paste(deparse(e, width.cutoff = 500L), collapse = " ")
 }
 
-test_that("simplify_native reaches the SPEC §5.2 structural form (subset)", {
+test_that("simplify_native reaches the SPEC §5.2 structural form", {
   expectations <- list(
     one     = "1",
     exp     = "exp(x)",
@@ -56,7 +54,10 @@ test_that("simplify_native reaches the SPEC §5.2 structural form (subset)", {
     add     = "x + y",
     mul     = "x * y",
     div     = "x/y",
-    pow     = "x^y"
+    pow     = "x^y",
+    sqrt    = "x^0.5",
+    sin     = "sin(x)",
+    cos     = "cos(x)"
   )
   catalog <- eml_catalog()
   for (nm in names(expectations)) {
@@ -86,10 +87,9 @@ test_that("constants (e, zero, neg_one, two, i, pi) fold to their values", {
   }
 })
 
-test_that("sqrt, sin, cos evaluate correctly even if not structurally collapsed", {
-  # Spec §5.3: Euler simplification is optional; these entries are
-  # guaranteed numerically correct (verify_catalog) but may retain
-  # extra structure under the current rule set.
+test_that("simplified sqrt, sin, cos still evaluate correctly", {
+  # Belt-and-braces: structural form is checked above; this verifies
+  # the symbolic output also evaluates to the right numeric value.
   spec_pts <- list(
     sqrt = list(x = 16,        expected = 4),
     sin  = list(x = pi / 6,    expected = 0.5),

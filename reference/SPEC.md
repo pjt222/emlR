@@ -333,19 +333,26 @@ rule. **Both should be fixed; do not weaken the test.**
 ### 5.3 Euler-formula simplification (sin, cos)
 
 `sin(x)` is constructed as `(exp(i*x) - exp(-i*x)) / (2i)`. After
-`simplify_native` collapses the EML nodes, you have an expression in
-terms of `exp`, `i`, and `x`. To recognise this as `sin(x)`, the
-simplifier needs an extra rule:
+`simplify_native` collapses the EML nodes the inner `exp(c + log(x))`
+form (with `c ≈ iπ/2`) is bridged by the cleanup rule
+`C-exp-const-plus-log` to `exp(c) * x = i*x`, after which the Euler
+patterns fire:
 
 | Rule | Pattern                                            | Result    |
 |------|----------------------------------------------------|-----------|
 | E1   | `(exp(0+1i * _x) - exp(-(0+1i * _x))) / (0+2i)`    | `sin(_x)` |
 | E2   | `(exp(0+1i * _x) + exp(-(0+1i * _x))) / 2`         | `cos(_x)` |
 
-These are arguably outside the simplifier's remit (they're trig identities,
-not EML rewrites) but including them gives the catalog test §5.2 a clean
-pass for sin/cos. Mark these as a separate rule group `simplify_native(expr,
-include_euler = TRUE)`, default TRUE.
+The patterns are constructed via `call()` rather than `quote()` because
+R's parser folds `0+1i * _x` into `+(0, *(0+1i, _x))`, the wrong
+shape. Atomic equality in the matcher uses a `1e-12` tolerance to
+absorb the round-off in `tree_i() = exp(log(-1)/2)` (which yields
+`6.12e-17 + 1i`); `.fold_constants` runs an asymmetric snap that zeros
+a sub-tolerance component only when the other component is dominantly
+large, so a deliberately small user constant is preserved.
+
+These rules are gated by `simplify_native(expr, include_euler = TRUE)`,
+default `TRUE`.
 
 ---
 

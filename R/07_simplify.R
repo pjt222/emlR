@@ -66,7 +66,11 @@ match_eml <- function(expr, pattern, bindings = list()) {
       # produced by the constant-folder, and `1L` matches `1`.
       if ((is.numeric(pattern) || is.complex(pattern)) &&
           (is.numeric(expr)    || is.complex(expr))) {
-        if (isTRUE(as.complex(expr) == as.complex(pattern))) {
+        # Tolerance absorbs round-off from complex log/exp chains
+        # (e.g. tree_i() = exp(log(-1)/2) yields 6.12e-17 + 1i).
+        # The match's RHS substitutes the rule's exact constants, so
+        # noise is replaced rather than propagated.
+        if (isTRUE(abs(as.complex(expr) - as.complex(pattern)) < 1e-12)) {
           return(bindings)
         }
         return(NULL)
@@ -218,7 +222,22 @@ simplify_eml <- function(expr) {
          rhs  = quote(`_x` ^ `_y`)),
     list(name = "C-exp-log-mul",
          lhs  = quote(exp(log(`_x`) * `_y`)),
-         rhs  = quote(`_x` ^ `_y`))
+         rhs  = quote(`_x` ^ `_y`)),
+
+    # exp(_C + log(_x)) = exp(_C) * _x    — re-merge constants that
+    # premature folding has lifted out of a log. Sound on the principal
+    # branch via exp(a+b) = exp(a)*exp(b) and exp(log(z)) = z; no Im
+    # constraint needed because the surrounding exp absorbs any 2πi
+    # ambiguity. The guard restricts _C to numeric/complex literals so
+    # the rule does not reorder symbolic expressions.
+    list(name = "C-exp-const-plus-log",
+         lhs  = quote(exp(`_C` + log(`_x`))),
+         rhs  = quote(exp(`_C`) * `_x`),
+         guard = function(b) {
+           v <- b[["_C"]]
+           is.atomic(v) && length(v) == 1L &&
+             (is.numeric(v) || is.complex(v))
+         })
   )
 }
 
@@ -233,6 +252,22 @@ simplify_eml <- function(expr) {
     exp  = function(x) base::exp(as.complex(x)),
     sqrt = function(x) base::sqrt(as.complex(x))
   ), parent = baseenv())
+}
+
+# Snap residual round-off in a folded complex constant. Only zeros a
+# tiny component when the other component is dominantly large, so a
+# genuinely small value (e.g. 1e-15+0i from a deliberate user constant)
+# is preserved. Collapses purely-real complex back to real for cleaner
+# downstream arithmetic.
+.snap_zero <- function(z, tol = 1e-12) {
+  if (!is.complex(z) || length(z) != 1L || !is.finite(z)) return(z)
+  re <- Re(z); im <- Im(z)
+  if (abs(im) < tol && abs(re) >= tol) {
+    z <- complex(real = re, imaginary = 0)
+  } else if (abs(re) < tol && abs(im) >= tol) {
+    z <- complex(real = 0, imaginary = im)
+  }
+  if (Im(z) == 0) Re(z) else z
 }
 
 # Recursively fold sub-trees with no free variables to a literal value,
@@ -250,7 +285,7 @@ simplify_eml <- function(expr) {
     if (!is.null(val) && length(val) == 1L &&
         (is.numeric(val) || is.complex(val)) &&
         is.finite(Re(val)) && is.finite(Im(val))) {
-      return(val)
+      return(.snap_zero(val))
     }
   }
   new_args <- lapply(as.list(expr)[-1L], .fold_constants)
@@ -258,11 +293,14 @@ simplify_eml <- function(expr) {
 }
 
 # Try every rule at the root of `expr`; return the rewritten form on the
-# first match, or NULL if no rule fires.
+# first match, or NULL if no rule fires. Rules may carry an optional
+# `guard` predicate evaluated against the bindings; the rule is skipped
+# unless the guard returns TRUE.
 .try_rules <- function(expr, rules) {
   for (rule in rules) {
     bindings <- match_eml(expr, rule$lhs)
     if (!is.null(bindings)) {
+      if (!is.null(rule$guard) && !isTRUE(rule$guard(bindings))) next
       return(list(expr = .subst_bindings(rule$rhs, bindings),
                   rule = rule$name))
     }
@@ -380,17 +418,24 @@ simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
 }
 
 # Euler rules — collapse the standard exponential forms back to sin/cos.
-# The exact form a fully-collapsed sin/cos construction takes depends on
-# the catalog; these patterns are the "obvious" canonical forms. Add
-# additional shapes here if a catalog entry collapses to a different
-# normal form.
+# Patterns are constructed via `call()` because R's parser folds
+# `0+1i * _x` to `+(0, *(0+1i, _x))`, not the desired `*(0+1i, _x)`.
+# Tolerance-aware atomic equality in match_eml() absorbs the residual
+# round-off in tree_i() = exp(log(-1)/2), which yields 6.12e-17 + 1i
+# rather than an exact 0+1i.
 .euler_rules <- function() {
+  ix     <- call("*", 0+1i, as.name("_x"))
+  neg_ix <- call("-", ix)
   list(
     list(name = "E1",
-         lhs  = quote((exp(0+1i * `_x`) - exp(-(0+1i * `_x`))) / (0+2i)),
+         lhs  = call("/",
+                     call("-", call("exp", ix), call("exp", neg_ix)),
+                     0+2i),
          rhs  = quote(sin(`_x`))),
     list(name = "E2",
-         lhs  = quote((exp(0+1i * `_x`) + exp(-(0+1i * `_x`))) / 2),
+         lhs  = call("/",
+                     call("+", call("exp", ix), call("exp", neg_ix)),
+                     2),
          rhs  = quote(cos(`_x`)))
   )
 }

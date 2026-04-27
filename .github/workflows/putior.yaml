@@ -26,7 +26,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
-            any::putior
+            pjt222/putior
 
       - name: Regenerate workflow diagram
         run: Rscript scripts/generate-workflow-diagram.R

@@ -107,20 +107,6 @@ reference:
       - theta_for_log
       - eml_fit
 
-  - title: Compatibility shim (legacy v1 names)
-    desc: >
-      Deprecated entry points retained so prototype code from the
-      pre-package era still runs. New code should not use these.
-    contents:
-      - as_eml_tree
-      - eml_eval_real
-      - ONE
-      - eml_master_eval
-      - eml_master_n_params
-      - theta_for_ln
-      - eml_tree
-      - unpack_theta
-
   - title: Package
     contents:
       - emlR-package

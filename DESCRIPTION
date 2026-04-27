@@ -12,7 +12,7 @@ Description: An R implementation of the EML (Exp-Minus-Log) Sheffer
     simplifier with two modes (stays-in-EML and collapses-to-base-R),
     a stack-machine bytecode compiler for vectorised evaluation, and
     a depth-n master formula with L-BFGS-B fitter for symbolic regression.
-License: CC BY 4.0
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

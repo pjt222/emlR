@@ -67,5 +67,7 @@ are deferred to later releases.
 
 ## License
 
-CC BY 4.0, mirroring the paper's license. All mathematical results are
-due to Odrzywołek; this package is an independent R implementation.
+MIT (see [`../LICENSE`](../LICENSE)). The paper itself is CC BY 4.0;
+all mathematical results are due to Odrzywołek (2026), and emlR is an
+independent R implementation. Cite the paper for any reuse of the
+results.

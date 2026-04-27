@@ -3,7 +3,7 @@
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/pjt222/emlR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pjt222/emlR/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/pjt222/emlR/actions/workflows/pkgdown.yaml/badge.svg)](https://pjt222.github.io/emlR/)
-[![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![arXiv](https://img.shields.io/badge/arXiv-2603.21852-b31b1b.svg)](https://arxiv.org/abs/2603.21852)
 <!-- badges: end -->
 
@@ -149,5 +149,7 @@ package:
 
 ## License
 
-CC BY 4.0, mirroring the paper. All mathematical results are due to
-Odrzywołek (2026); this package is an independent R implementation.
+MIT (see [`LICENSE`](LICENSE)). The paper itself is CC BY 4.0; all
+mathematical results are due to Odrzywołek (2026), and emlR is an
+independent R implementation. Cite the paper for any reuse of the
+results.

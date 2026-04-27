@@ -114,6 +114,37 @@ test_that("snap_master_params produces one-hot per slot", {
   expect_equal(snap_master_params(snapped, 2), snapped)
 })
 
+# --- 5d1: fast smoke test — eml_fit returns the documented list shape -------
+#
+# The Phase-5 SR-recovery gate runs in ~1 minute and is opt-in via
+# EMLR_RUN_SLOW=true, so without this test no CI run exercises the
+# fitter end-to-end. depth=1, n_restarts=1, maxit=10 finishes in
+# milliseconds and verifies the @return contract documented for
+# eml_fit (every named slot present, correct mode/length).
+
+test_that("eml_fit returns the documented list shape on a tiny input", {
+  xs <- seq(0.5, 2, length.out = 8)
+  ys <- log(xs)
+  fit <- eml_fit(xs, ys, depth = 1L, parameterization = "simplex",
+                 n_restarts = 1L, maxit = 10L, seed = 1L)
+
+  expected <- c("par", "theta", "theta_snap", "pred", "pred_snap",
+                "final_value", "snap_mse", "n_restarts_run", "best_seed")
+  expect_setequal(names(fit), expected)
+
+  n_par <- master_n_params(1L)
+  expect_length(fit$par,        n_par)
+  expect_length(fit$theta,      n_par)
+  expect_length(fit$theta_snap, n_par)
+  expect_length(fit$pred,       length(xs))
+  expect_length(fit$pred_snap,  length(xs))
+
+  expect_true(is.numeric(fit$final_value) && length(fit$final_value) == 1L)
+  expect_true(is.numeric(fit$snap_mse)    && length(fit$snap_mse)    == 1L)
+  expect_identical(fit$n_restarts_run, 1L)
+  expect_identical(fit$best_seed, 1L)
+})
+
 # --- 5d2: eml_fit must not mutate the global RNG -----------------------------
 #
 # CRAN policy (Writing R Extensions §1.6) forbids packages from leaking

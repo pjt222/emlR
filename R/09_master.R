@@ -356,6 +356,24 @@ eml_fit <- function(x, y, depth = 3L,
   fn <- function(par) loss_and_grad(par)$value
   gr <- function(par) loss_and_grad(par)$grad
 
+  # Save/restore the caller's RNG state. set.seed() inside the loop
+  # would otherwise leak deterministic state into the user's session
+  # (CRAN policy violation: packages must not modify global state).
+  old_seed <- if (exists(".Random.seed", envir = .GlobalEnv)) {
+    get(".Random.seed", envir = .GlobalEnv)
+  } else {
+    NULL
+  }
+  on.exit({
+    if (is.null(old_seed)) {
+      if (exists(".Random.seed", envir = .GlobalEnv)) {
+        rm(".Random.seed", envir = .GlobalEnv)
+      }
+    } else {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
   best <- NULL
   for (k in seq_len(n_restarts)) {
     set.seed(seed + k - 1L)

@@ -114,6 +114,35 @@ test_that("snap_master_params produces one-hot per slot", {
   expect_equal(snap_master_params(snapped, 2), snapped)
 })
 
+# --- 5d2: eml_fit must not mutate the global RNG -----------------------------
+#
+# CRAN policy (Writing R Extensions §1.6) forbids packages from leaking
+# random state into the caller's session. eml_fit calls set.seed inside
+# its restart loop and so must save and restore .Random.seed on exit.
+
+test_that("eml_fit leaves .Random.seed untouched", {
+  xs <- seq(0.5, 2, length.out = 8)
+  ys <- log(xs)
+
+  set.seed(7)
+  before <- runif(1)
+
+  set.seed(7)
+  fit <- eml_fit(xs, ys, depth = 1, parameterization = "simplex",
+                 n_restarts = 2L, maxit = 20L, seed = 100L)
+  after <- runif(1)
+
+  expect_identical(before, after)
+
+  # Edge case: a fresh session where .Random.seed is not set.
+  if (exists(".Random.seed", envir = .GlobalEnv)) {
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+  fit <- eml_fit(xs, ys, depth = 1, parameterization = "simplex",
+                 n_restarts = 1L, maxit = 5L, seed = 1L)
+  expect_false(exists(".Random.seed", envir = .GlobalEnv))
+})
+
 # --- 5e: SR recovery of log(x) at depth 3 ----------------------------------
 #
 # This is the paper's headline reproducibility demo. With analytic

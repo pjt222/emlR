@@ -136,12 +136,20 @@ tree_cos <- function(x = "x") {
   tree_div(numer, tree_two())
 }
 
-#' EML expressions for all standard elementary functions and constants
+#' EML expressions for the elementary functions and constants
+#' implemented in this release
 #'
 #' Each entry is a closed `call` (or literal) representing the named
-#' primitive in pure-EML form. Constructions follow the v1 prototype;
-#' they are correct but not K-optimal — see the paper's Table 4 for
-#' the smaller forms found by exhaustive search.
+#' primitive in pure-EML form. The catalog covers the 18 entries
+#' listed in [eml_catalog()]: the seven constants `one`, `e`, `zero`,
+#' `neg_one`, `two`, `i`, `pi`, the unary primitives `exp`, `log`,
+#' `minus`, `sqrt`, `sin`, `cos`, and the binary primitives `add`,
+#' `sub`, `mul`, `div`, `pow`. Higher trigonometric primitives
+#' (`tan`, `asin`, `acos`, `atan`) and hyperbolics (`sinh`, `cosh`,
+#' `tanh`) are constructible from the same building blocks but are
+#' not shipped as named entries. Constructions are correct but not
+#' K-optimal — see the paper's Table 4 for the smaller forms found
+#' by exhaustive search.
 #'
 #' @param x,y character (variable name) or an EML expression to embed.
 #'   Univariate constructors take only `x`; bivariate constructors
@@ -149,6 +157,11 @@ tree_cos <- function(x = "x") {
 #'   both. Defaults are `"x"` and `"y"`.
 #' @name tree_identities
 #' @return An EML expression.
+#' @examples
+#' tree_log("x")    # eml(1, eml(eml(1, x), 1))  — paper Eq. 5
+#' tree_exp("x")    # eml(x, 1)
+#' tree_add("x", "y")
+#' simplify_native(tree_log("x"))   # log(x)
 NULL
 
 #' All catalog identities as a named list

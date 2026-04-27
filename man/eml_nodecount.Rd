@@ -12,3 +12,6 @@ eml_nodecount(expr)
 \description{
 Alias for \code{\link[=eml_K]{eml_K()}} — returns total node count.
 }
+\examples{
+eml_nodecount(quote(eml(1, eml(eml(1, x), 1))))  # 7
+}

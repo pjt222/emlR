@@ -4,7 +4,7 @@
 \alias{match_eml}
 \title{Pattern-match an EML expression against a meta-variable pattern}
 \usage{
-match_eml(expr, pattern, bindings = list())
+match_eml(expr, pattern, bindings = list(), tol = 0)
 }
 \arguments{
 \item{expr}{the expression to match.}

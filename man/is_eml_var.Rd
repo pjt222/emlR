@@ -15,3 +15,8 @@ Logical scalar.
 \description{
 Is the object an EML variable reference (a \code{name})?
 }
+\examples{
+is_eml_var(quote(x))           # TRUE
+is_eml_var(1)                  # FALSE — numeric
+is_eml_var(quote(eml(1, x)))   # FALSE — call
+}

@@ -14,3 +14,4 @@
 ^pkgdown$
 ^\.git$
 ^\.gitignore$
+^cran-comments\.md$

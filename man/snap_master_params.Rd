@@ -20,3 +20,8 @@ sets it to 1, the others to 0. Recovers the discrete grammar choice
 at every slot. After snapping, evaluating the master should reproduce
 the corresponding closed-form symbolic expression.
 }
+\examples{
+theta <- theta_for_exp()
+snapped <- snap_master_params(theta, depth = 1)
+identical(snapped, theta)        # already one-hot
+}

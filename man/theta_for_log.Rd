@@ -14,3 +14,6 @@ Recovers \code{log(x) = eml(1, eml(eml(1, x), 1))} (paper Eq. 5).
 All inner slots use \code{gamma = 1} (route through \code{f}); leaf slots
 choose the literal \code{1} or the input \code{x} per the structure.
 }
+\examples{
+length(theta_for_log())          # 34 — matches master_n_params(3)
+}

@@ -14,3 +14,6 @@ Recovers \code{exp(x) = eml(x, 1)} in the depth-1 master:
 left input \code{x} (slot 1: alpha=0, beta=1), right input \code{1}
 (slot 2: alpha=1, beta=0).
 }
+\examples{
+theta_for_exp()
+}

@@ -56,6 +56,11 @@ is_eml_call <- function(x) {
 #' Is the object an EML constant literal?
 #' @param x object to test.
 #' @return Logical scalar.
+#' @examples
+#' is_eml_const(1)               # TRUE
+#' is_eml_const(0+1i)             # TRUE
+#' is_eml_const(c(1, 2))          # FALSE — length-2 vector
+#' is_eml_const(quote(x))         # FALSE — name
 #' @export
 is_eml_const <- function(x) {
   (is.numeric(x) || is.complex(x)) && length(x) == 1L
@@ -64,6 +69,10 @@ is_eml_const <- function(x) {
 #' Is the object an EML variable reference (a `name`)?
 #' @param x object to test.
 #' @return Logical scalar.
+#' @examples
+#' is_eml_var(quote(x))           # TRUE
+#' is_eml_var(1)                  # FALSE — numeric
+#' is_eml_var(quote(eml(1, x)))   # FALSE — call
 #' @export
 is_eml_var <- function(x) {
   is.name(x)

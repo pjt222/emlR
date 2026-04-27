@@ -45,3 +45,12 @@ convergence, snaps each slot to its argmax one-hot vertex and
 reports the snapped MSE — values at machine epsilon squared
 indicate exact symbolic recovery.
 }
+\examples{
+\donttest{
+xs <- seq(0.5, 5, length.out = 30)
+ys <- log(xs)
+fit <- eml_fit(xs, ys, depth = 3, n_restarts = 2,
+               maxit = 200, seed = 1)
+fit$snap_mse  # ~ 0 indicates exact symbolic recovery of log(x)
+}
+}

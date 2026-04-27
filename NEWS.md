@@ -1,4 +1,4 @@
-# emlR 0.1.0 (in development)
+# emlR 0.1.0
 
 First release. Implements the EML (Exp-Minus-Log) Sheffer operator
 from Odrzywolek (2026, arXiv:2603.21852) — a single binary operator

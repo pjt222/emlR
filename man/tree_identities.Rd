@@ -21,7 +21,8 @@
 \alias{tree_sin}
 \alias{tree_cos}
 \alias{tree_identities}
-\title{EML expressions for all standard elementary functions and constants}
+\title{EML expressions for the elementary functions and constants
+implemented in this release}
 \usage{
 tree_e()
 
@@ -72,7 +73,20 @@ An EML expression.
 }
 \description{
 Each entry is a closed \code{call} (or literal) representing the named
-primitive in pure-EML form. Constructions follow the v1 prototype;
-they are correct but not K-optimal — see the paper's Table 4 for
-the smaller forms found by exhaustive search.
+primitive in pure-EML form. The catalog covers the 18 entries
+listed in \code{\link[=eml_catalog]{eml_catalog()}}: the seven constants \code{one}, \code{e}, \code{zero},
+\code{neg_one}, \code{two}, \code{i}, \code{pi}, the unary primitives \code{exp}, \code{log},
+\code{minus}, \code{sqrt}, \code{sin}, \code{cos}, and the binary primitives \code{add},
+\code{sub}, \code{mul}, \code{div}, \code{pow}. Higher trigonometric primitives
+(\code{tan}, \code{asin}, \code{acos}, \code{atan}) and hyperbolics (\code{sinh}, \code{cosh},
+\code{tanh}) are constructible from the same building blocks but are
+not shipped as named entries. Constructions are correct but not
+K-optimal — see the paper's Table 4 for the smaller forms found
+by exhaustive search.
+}
+\examples{
+tree_log("x")    # eml(1, eml(eml(1, x), 1))  — paper Eq. 5
+tree_exp("x")    # eml(x, 1)
+tree_add("x", "y")
+simplify_native(tree_log("x"))   # log(x)
 }

@@ -148,6 +148,8 @@ unpack_master_params <- function(par, depth) {
 #' left input `x` (slot 1: alpha=0, beta=1), right input `1`
 #' (slot 2: alpha=1, beta=0).
 #' @return Numeric vector of length 4.
+#' @examples
+#' theta_for_exp()
 #' @export
 theta_for_exp <- function() {
   .slots_to_par(list(c(0, 1), c(1, 0)), depth = 1L)
@@ -160,6 +162,8 @@ theta_for_exp <- function() {
 #' choose the literal `1` or the input `x` per the structure.
 #'
 #' @return Numeric vector of length 34.
+#' @examples
+#' length(theta_for_log())          # 34 — matches master_n_params(3)
 #' @export
 theta_for_log <- function() {
   use_one_inner    <- c(1, 0, 0)
@@ -226,6 +230,10 @@ theta_for_log <- function() {
 #' @param par numeric vector of length `master_n_params(depth)`.
 #' @param depth integer >= 1.
 #' @return Numeric vector of the same length as `par`.
+#' @examples
+#' theta <- theta_for_exp()
+#' snapped <- snap_master_params(theta, depth = 1)
+#' identical(snapped, theta)        # already one-hot
 #' @export
 snap_master_params <- function(par, depth) {
   if (length(par) != master_n_params(depth)) {
@@ -299,6 +307,14 @@ snap_master_params <- function(par, depth) {
 #' @param seed RNG seed for reproducibility (each restart shifts it by 1).
 #' @return List with `par`, `theta`, `theta_snap`, `pred`, `pred_snap`,
 #'   `final_value`, `snap_mse`, `n_restarts_run`, `best_seed`.
+#' @examples
+#' \donttest{
+#' xs <- seq(0.5, 5, length.out = 30)
+#' ys <- log(xs)
+#' fit <- eml_fit(xs, ys, depth = 3, n_restarts = 2,
+#'                maxit = 200, seed = 1)
+#' fit$snap_mse  # ~ 0 indicates exact symbolic recovery of log(x)
+#' }
 #' @export
 eml_fit <- function(x, y, depth = 3L,
                     parameterization = c("simplex", "direct"),
@@ -375,7 +391,9 @@ eml_fit <- function(x, y, depth = 3L,
   }, add = TRUE)
 
   best <- NULL
+  n_run <- 0L
   for (k in seq_len(n_restarts)) {
+    n_run <- n_run + 1L
     set.seed(seed + k - 1L)
     par0 <- rnorm(n_par, sd = 0.5)
     # Guard: if the starting point is non-finite, skip to a small jitter
@@ -420,14 +438,15 @@ eml_fit <- function(x, y, depth = 3L,
   snap_mse <- if (all(is.finite(pred_snap))) mean((pred_snap - y)^2) else NA_real_
 
   list(
-    par         = best$par,
-    theta       = theta_par,
-    theta_snap  = theta_par_snap,
-    pred        = pred,
-    pred_snap   = pred_snap,
-    final_value = best$value,
-    snap_mse    = snap_mse,
-    best_seed   = best$seed
+    par             = best$par,
+    theta           = theta_par,
+    theta_snap      = theta_par_snap,
+    pred            = pred,
+    pred_snap       = pred_snap,
+    final_value     = best$value,
+    snap_mse        = snap_mse,
+    n_restarts_run  = n_run,
+    best_seed       = best$seed
   )
 }
 

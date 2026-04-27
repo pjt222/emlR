@@ -1,29 +1,31 @@
 Package: emlR
-Title: All Elementary Functions From a Single Binary Operator
-Version: 0.1.0.9000
+Title: All Elementary Functions from a Single Binary Operator
+Version: 0.1.0
 Authors@R:
     person("Philipp", "Thoss", , "ph.thoss@gmx.de", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-4672-2792"))
+           comment = c(ORCID = "https://orcid.org/0000-0002-4672-2792"))
 Description: An R implementation of the EML (Exp-Minus-Log) Sheffer
-    operator from Odrzywolek (2026, arXiv:2603.21852), which proves that
-    a single binary operator eml(x, y) = exp(x) - log(y), together with
-    the constant 1, generates all elementary functions. The package
-    provides the operator, native R-AST identity catalog, peephole
-    simplifier with two modes (stays-in-EML and collapses-to-base-R),
-    a stack-machine bytecode compiler for vectorised evaluation, and
-    a depth-n master formula with L-BFGS-B fitter for symbolic regression.
+    operator from Odrzywolek (2026) <doi:10.48550/arXiv.2603.21852>,
+    which proves that a single binary operator eml(x, y) = exp(x) -
+    log(y), together with the constant 1, generates all elementary
+    functions. The package provides the operator, native R-AST
+    identity catalog, peephole simplifier with two modes
+    (stays-in-EML and collapses-to-base-R), a stack-machine bytecode
+    compiler for vectorised evaluation, and a depth-n master formula
+    with L-BFGS-B fitter for symbolic regression.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends:
-    R (>= 3.6)
+    R (>= 4.0.0)
 Imports:
     Deriv
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    spelling
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://github.com/pjt222/emlR, https://pjt222.github.io/emlR/

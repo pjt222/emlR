@@ -1,0 +1,23 @@
+citHeader(
+  "If you use emlR in published work, please cite both the package ",
+  "and the paper whose results it implements."
+)
+
+bibentry(
+  bibtype = "Manual",
+  title   = "{emlR}: All Elementary Functions from a Single Binary Operator",
+  author  = person("Philipp", "Thoss"),
+  year    = format(Sys.Date(), "%Y"),
+  note    = "R package, independent implementation of arXiv:2603.21852",
+  url     = "https://github.com/pjt222/emlR"
+)
+
+bibentry(
+  bibtype      = "Article",
+  title        = "All elementary functions from a single binary operator",
+  author       = person("Andrzej", "Odrzywołek"),
+  year         = "2026",
+  journal      = "arXiv preprint",
+  doi          = "10.48550/arXiv.2603.21852",
+  url          = "https://arxiv.org/abs/2603.21852"
+)

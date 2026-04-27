@@ -34,6 +34,8 @@ eml_K <- function(expr) {
 
 #' Alias for [eml_K()] — returns total node count.
 #' @inheritParams eml_K
+#' @examples
+#' eml_nodecount(quote(eml(1, eml(eml(1, x), 1))))  # 7
 #' @export
 eml_nodecount <- function(expr) eml_K(expr)
 

@@ -32,10 +32,32 @@
 #' max(abs(lx - log(xs)))
 #' @export
 eml_eval <- function(expr, vars = list(), real = FALSE, tol = 1e-8) {
+  if (!is_eml_expr(expr)) {
+    stop("eml_eval: `expr` must be an EML expression. ",
+         "Use `eval(expr, ...)` directly to evaluate other R calls.")
+  }
   if (!is.list(vars)) {
     stop("eml_eval: `vars` must be a (possibly empty) named list.")
   }
-  env <- list2env(c(list(eml = eml), vars), parent = baseenv())
+  if (length(vars) > 0L &&
+      (is.null(names(vars)) || !all(nzchar(names(vars))))) {
+    stop("eml_eval: every entry of `vars` must be named.")
+  }
+  # Restrict the eval env: only the EML operator and the user-supplied
+  # bindings are visible. parent = emptyenv() blocks resolution of any
+  # base-R function (system, source, file, ...) that an adversarial
+  # call head could otherwise reach.
+  #
+  # Unary +/- and parens are injected explicitly because R parses
+  # source-level negative literals (`-1`) as `call("-", 1)`, and
+  # parenthesised expressions as calls to `(`. The is_eml_expr guard
+  # already constrains call heads to the safe set; these injections
+  # let the legitimate ones evaluate.
+  env <- list2env(c(
+    list(eml = eml,
+         `-` = `-`, `+` = `+`, `(` = `(`),
+    vars
+  ), parent = emptyenv())
   z <- eval(expr, envir = env)
   # Always return complex from the default path (SPEC §2.2). A bare-leaf
   # expression like `expr = 2` evaluates to numeric otherwise, breaking

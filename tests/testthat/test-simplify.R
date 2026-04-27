@@ -128,3 +128,31 @@ test_that("simplify_native is idempotent on the headline forms", {
     expect_identical(once, twice)
   }
 })
+
+# --- 4d. input validation -- security regression ----------------------------
+#
+# .complex_fold_env / eml_eval previously evaluated any closed subtree
+# in baseenv(), so `simplify_native(quote(eml(system("...”), 1)))`
+# silently executed the shell command. The fix is two-fold: an
+# is_eml_expr / safe-heads guard at every entry point, and a
+# parent=emptyenv() restricted eval env. These tests pin the closure.
+
+test_that("simplify_native rejects calls to disallowed heads", {
+  bad <- quote(eml(system("echo X", intern = FALSE), 1))
+  expect_error(simplify_native(bad), "vocabulary")
+})
+
+test_that("simplify_eml rejects calls to disallowed heads", {
+  bad <- quote(eml(system("echo X", intern = FALSE), 1))
+  expect_error(simplify_eml(bad), "vocabulary")
+})
+
+test_that("simplify_native still accepts re-application of its own output", {
+  once  <- simplify_native(quote(eml(1, eml(eml(1, x), 1))))
+  twice <- simplify_native(once)
+  expect_identical(once, twice)
+})
+
+test_that("simplify_native accepts unary minus on a literal", {
+  expect_silent(simplify_native(quote(eml(0, -1))))
+})

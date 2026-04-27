@@ -22,6 +22,15 @@ is_eml_expr <- function(x) {
   if (is_eml_call(x)) {
     return(is_eml_expr(x[[2L]]) && is_eml_expr(x[[3L]]))
   }
+  # Unary +/- wrappers: R's parser turns the source literal `-1`
+  # into call("-", 1), so an `eml(...)` argument written as `-1`
+  # arrives as a call, not a bare numeric. Treat unary +/- on an
+  # EML expression as an EML expression.
+  if (is.call(x) && length(x) == 2L &&
+      is.name(x[[1L]]) &&
+      as.character(x[[1L]]) %in% c("-", "+")) {
+    return(is_eml_expr(x[[2L]]))
+  }
   FALSE
 }
 
@@ -58,4 +67,31 @@ is_eml_const <- function(x) {
 #' @export
 is_eml_var <- function(x) {
   is.name(x)
+}
+
+# Safe-heads predicate used by the simplifier entry guards. Permits
+# re-application of simplifier output (which contains exp/log/sqrt
+# and arithmetic operators) but rejects arbitrary R calls — most
+# importantly, side-effecting ones such as `system`, `source`, or
+# `do.call`. This is the primary defence against SPEC-§2.1
+# adversarial input flowing into `.fold_constants` or `eval()`.
+.SAFE_SIMPLIFIER_HEADS <- c("eml", "exp", "log", "sqrt", "sin", "cos",
+                            "+", "-", "*", "/", "^", "(")
+
+.tree_uses_only_safe_heads <- function(x) {
+  if (is.atomic(x) && length(x) == 1L) return(TRUE)
+  if (is.name(x)) return(TRUE)
+  if (is.call(x)) {
+    head_name <- tryCatch(as.character(x[[1L]]),
+                          error = function(e) "")
+    if (length(head_name) != 1L ||
+        !head_name %in% .SAFE_SIMPLIFIER_HEADS) {
+      return(FALSE)
+    }
+    for (i in seq_len(length(x) - 1L) + 1L) {
+      if (!.tree_uses_only_safe_heads(x[[i]])) return(FALSE)
+    }
+    return(TRUE)
+  }
+  FALSE
 }

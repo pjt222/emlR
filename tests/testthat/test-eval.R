@@ -55,3 +55,22 @@ test_that("eml_eval returns complex when real = FALSE", {
   z <- eml_eval(quote(eml(x, 1)), list(x = 1.5))
   expect_true(is.complex(z))
 })
+
+# --- 5d. input validation -- security regression ----------------------------
+#
+# Pre-fix, `eml_eval(quote(system("..."")), list())` executed the
+# shell call. The is_eml_expr guard plus parent=emptyenv() eval env
+# close that path.
+
+test_that("eml_eval rejects non-EML expressions", {
+  expect_error(eml_eval(quote(x + y), list(x = 1, y = 2)), "EML expression")
+  expect_error(eml_eval(quote(system("echo X")), list()), "EML expression")
+  # Wrapping the malicious call inside an `eml(...)` does not bypass —
+  # the recursive is_eml_expr check rejects the inner non-EML call.
+  expect_error(eml_eval(quote(eml(system("echo X"), 1)), list()),
+               "EML expression")
+})
+
+test_that("eml_eval rejects unnamed entries in vars", {
+  expect_error(eml_eval(quote(eml(x, 1)), list(1)), "named")
+})

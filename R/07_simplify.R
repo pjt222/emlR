@@ -116,9 +116,19 @@ match_eml <- function(expr, pattern, bindings = list()) {
 #' simplify_eml(quote(eml(x, eml(1, 1))))  # eml(x, e)
 #' @export
 simplify_eml <- function(expr) {
+  if (!.tree_uses_only_safe_heads(expr)) {
+    stop("simplify_eml: `expr` contains a call to a function that ",
+         "is not part of the EML or simplifier vocabulary. Allowed ",
+         "heads: ",
+         paste(.SAFE_SIMPLIFIER_HEADS, collapse = ", "), ".")
+  }
   if (!is.call(expr)) return(expr)
+  # Pass non-EML calls through unchanged. (After the safe-heads guard
+  # above, these can only be exp/log/sqrt/arithmetic from re-applying
+  # the function to simplifier output.)
+  if (!identical(expr[[1L]], as.name("eml"))) return(expr)
   if (length(all.vars(expr)) == 0L) {
-    return(eval(expr, list2env(list(eml = eml), parent = baseenv())))
+    return(eval(expr, list2env(list(eml = eml), parent = emptyenv())))
   }
   call("eml", simplify_eml(expr[[2L]]), simplify_eml(expr[[3L]]))
 }
@@ -245,13 +255,24 @@ simplify_eml <- function(expr) {
 # their arguments, so log(-1) and log(0) and similar resolve via the
 # principal branch (matching the EML semantics) rather than producing
 # real-domain NaN.
+#
+# parent = emptyenv() restricts the env to the explicit bindings only.
+# This prevents resolution of any base-R function (system, source, ...)
+# even if an adversarial call slips past the input-validation guard.
+# All operators the simplifier may emit are injected explicitly.
 .complex_fold_env <- function() {
   list2env(list(
     eml  = eml,
     log  = function(x) base::log(as.complex(x)),
     exp  = function(x) base::exp(as.complex(x)),
-    sqrt = function(x) base::sqrt(as.complex(x))
-  ), parent = baseenv())
+    sqrt = function(x) base::sqrt(as.complex(x)),
+    `+`  = `+`,
+    `-`  = `-`,
+    `*`  = `*`,
+    `/`  = `/`,
+    `^`  = `^`,
+    `(`  = `(`
+  ), parent = emptyenv())
 }
 
 # Snap residual round-off in a folded complex constant. Only zeros a
@@ -380,6 +401,12 @@ simplify_eml <- function(expr) {
 #' simplify_native(quote(eml(log(a), exp(b))))                   # a - b
 #' @export
 simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
+  if (!.tree_uses_only_safe_heads(expr)) {
+    stop("simplify_native: `expr` contains a call to a function that ",
+         "is not part of the EML or simplifier vocabulary. Allowed ",
+         "heads: ",
+         paste(.SAFE_SIMPLIFIER_HEADS, collapse = ", "), ".")
+  }
   rules <- c(.native_rules(), .native_cleanup_rules())
   if (isTRUE(include_euler)) {
     rules <- c(rules, .euler_rules())

@@ -156,3 +156,42 @@ test_that("simplify_native still accepts re-application of its own output", {
 test_that("simplify_native accepts unary minus on a literal", {
   expect_silent(simplify_native(quote(eml(0, -1))))
 })
+
+# --- 4e. unsound-rewrite guards (B-NEG-POW, B-LOG-EXP-WRAP, B-CONSTPLUS-OF) ---
+#
+# These rules previously fired without checking the runtime domain of
+# their bound metavariables, producing simplified expressions that
+# evaluated wrong (NaN, branch-wrap loss, or overflow). The new
+# guards refuse to fire on values that would violate I3.
+
+test_that("C-exp-mul-log refuses to collapse exp(0.5 * log(-4))", {
+  smp <- simplify_native(quote(exp(0.5 * log(-4))))
+  expect_false(identical(smp, quote(`-4` ^ 0.5)))
+  expect_false(identical(smp, call("^", -4, 0.5)))
+  expect_equal(as.complex(eval(smp, list())),
+               as.complex(0 + 2i),
+               tolerance = 1e-12)
+})
+
+test_that("C-log-exp refuses to drop wrap when |Im| > pi", {
+  smp <- simplify_native(quote(log(exp(0 + 4i))))
+  expect_false(identical(smp, quote(0 + 4i)))
+  expect_equal(as.complex(eval(smp, list())),
+               as.complex(log(exp(0 + 4i))),
+               tolerance = 1e-12)
+})
+
+test_that("C-exp-const-plus-log refuses to lift exp(_C) when _C overflows", {
+  smp <- simplify_native(quote(exp(710 + log(x))))
+  expect_identical(smp, quote(exp(710 + log(x))))
+  expect_equal(eval(smp, list(x = 1e-310)),
+               eval(quote(exp(710 + log(x))), list(x = 1e-310)),
+               tolerance = 1e-12)
+})
+
+test_that("matcher tolerance is opt-in: 1e-13 does not match literal 0", {
+  expect_identical(simplify_native(quote(eml(1e-13, x))),
+                   quote(eml(1e-13, x)))
+  expect_identical(simplify_native(quote(eml(x, 1 + 5e-13))),
+                   quote(eml(x, 1.0000000000005)))
+})

@@ -46,7 +46,7 @@
 #' match_eml(quote(eml(x, y)),       quote(eml(`_x`, `_x`))) # NULL
 #' match_eml(quote(eml(log(a), 1)),  quote(eml(log(`_x`), 1))) # _x = a
 #' @export
-match_eml <- function(expr, pattern, bindings = list()) {
+match_eml <- function(expr, pattern, bindings = list(), tol = 0) {
   if (.is_metavar(pattern)) {
     nm <- as.character(pattern)
     if (nm %in% names(bindings)) {
@@ -63,14 +63,21 @@ match_eml <- function(expr, pattern, bindings = list()) {
   if (is.atomic(pattern) && length(pattern) == 1L) {
     if (is.atomic(expr) && length(expr) == 1L) {
       # Allow numeric==complex equivalence so literal `0` matches `0+0i`
-      # produced by the constant-folder, and `1L` matches `1`.
+      # produced by the constant-folder, and `1L` matches `1`. With
+      # `tol > 0`, additionally absorb round-off (rule-controlled — the
+      # default of 0 means exact equality, which prevents the tolerance
+      # from silently eating user constants like `1e-13`; the Euler
+      # rules opt in to `tol = 1e-12` because tree_i() = exp(log(-1)/2)
+      # produces 6.12e-17 + 1i instead of an exact 0+1i).
       if ((is.numeric(pattern) || is.complex(pattern)) &&
           (is.numeric(expr)    || is.complex(expr))) {
-        # Tolerance absorbs round-off from complex log/exp chains
-        # (e.g. tree_i() = exp(log(-1)/2) yields 6.12e-17 + 1i).
-        # The match's RHS substitutes the rule's exact constants, so
-        # noise is replaced rather than propagated.
-        if (isTRUE(abs(as.complex(expr) - as.complex(pattern)) < 1e-12)) {
+        if (tol > 0) {
+          if (isTRUE(abs(as.complex(expr) - as.complex(pattern)) < tol)) {
+            return(bindings)
+          }
+          return(NULL)
+        }
+        if (isTRUE(as.complex(expr) == as.complex(pattern))) {
           return(bindings)
         }
         return(NULL)
@@ -84,7 +91,7 @@ match_eml <- function(expr, pattern, bindings = list()) {
     if (length(pattern) != length(expr)) return(NULL)
     if (!identical(pattern[[1L]], expr[[1L]])) return(NULL)
     for (i in seq_len(length(pattern) - 1L) + 1L) {
-      bindings <- match_eml(expr[[i]], pattern[[i]], bindings)
+      bindings <- match_eml(expr[[i]], pattern[[i]], bindings, tol = tol)
       if (is.null(bindings)) return(NULL)
     }
     return(bindings)
@@ -131,6 +138,49 @@ simplify_eml <- function(expr) {
     return(eval(expr, list2env(list(eml = eml), parent = emptyenv())))
   }
   call("eml", simplify_eml(expr[[2L]]), simplify_eml(expr[[3L]]))
+}
+
+# ---- Rule guards used by simplify_native rules -----------------------------
+
+# Fold a closed (no-free-variable) subtree to its numeric/complex
+# value via the simplifier's complex-aware env. Returns NULL if the
+# tree has free variables, fails to fold, or the value is not a
+# finite scalar. R's parser turns the source literal `-4` into
+# call("-", 4), so guards that need the actual base value must fold
+# rather than just inspect the AST shape.
+.fold_to_scalar <- function(x) {
+  if (length(all.vars(x)) > 0L) return(NULL)
+  v <- tryCatch(eval(x, .complex_fold_env()),
+                error = function(e) NULL,
+                warning = function(w) NULL)
+  if (is.null(v) || length(v) != 1L) return(NULL)
+  if (!(is.numeric(v) || is.complex(v))) return(NULL)
+  if (!is.finite(v)) return(NULL)
+  v
+}
+
+# `_x ^ _y` rewrites only when _x cannot drive R's `^` into the real
+# branch on a negative base. Symbolic _x (free variables present) is
+# allowed; the caller is responsible for domain at eval time. Atomic
+# or closed _x must fold to a positive real, or to a complex with
+# non-zero imaginary part (R's complex `^` matches the EML chain's
+# principal-branch value there).
+.pow_base_safe <- function(x) {
+  if (length(all.vars(x)) > 0L) return(TRUE)
+  v <- .fold_to_scalar(x)
+  if (is.null(v)) return(FALSE)
+  if (is.complex(v) && Im(v) != 0) return(TRUE)
+  Re(v) > 0
+}
+
+# log(exp(_x)) -> _x is sound only when |Im(_x)| <= pi. Symbolic _x
+# is allowed (catalog flows do not produce out-of-strip values);
+# atomic / closed _x must fold to a value in the principal strip.
+.log_exp_unwrap_safe <- function(x) {
+  if (length(all.vars(x)) > 0L) return(TRUE)
+  v <- .fold_to_scalar(x)
+  if (is.null(v)) return(FALSE)
+  abs(Im(as.complex(v))) <= base::pi
 }
 
 # ---- simplify_native: collapse to base-R primitives ------------------------
@@ -189,10 +239,16 @@ simplify_eml <- function(expr) {
 # tree_mul, tree_div, tree_pow.
 .native_cleanup_rules <- function() {
   list(
-    # log/exp inverses on the principal branch
+    # log/exp inverses on the principal branch. log(exp(z)) = z holds
+    # only when |Im(z)| <= pi; outside the strip, R's principal-branch
+    # log wraps and the rewrite would lose information. Refuse to fire
+    # on atomic literals whose imaginary part exits the strip.
+    # Symbolic _x is allowed (catalog flows that nest log(exp(.)) inside
+    # the simplifier do not produce out-of-strip values in practice).
     list(name = "C-log-exp",
          lhs  = quote(log(exp(`_x`))),
-         rhs  = quote(`_x`)),
+         rhs  = quote(`_x`),
+         guard = function(b) .log_exp_unwrap_safe(b[["_x"]])),
     list(name = "C-exp-log",
          lhs  = quote(exp(log(`_x`))),
          rhs  = quote(`_x`)),
@@ -226,27 +282,38 @@ simplify_eml <- function(expr) {
          lhs  = quote(log(`_x`) - log(`_y`)),
          rhs  = quote(log(`_x` / `_y`))),
 
-    # exp(_y * log(_x)) = _x ^ _y    — pow shortcut
+    # exp(_y * log(_x)) = _x ^ _y    — pow shortcut.
+    # Sound on the principal branch when _x is symbolic (the user is
+    # responsible for the domain at eval time) or atomic positive
+    # real. For atomic negative real, R's `^` returns NaN
+    # (real-domain semantics), breaking I3 — so refuse to fire.
     list(name = "C-exp-mul-log",
          lhs  = quote(exp(`_y` * log(`_x`))),
-         rhs  = quote(`_x` ^ `_y`)),
+         rhs  = quote(`_x` ^ `_y`),
+         guard = function(b) .pow_base_safe(b[["_x"]])),
     list(name = "C-exp-log-mul",
          lhs  = quote(exp(log(`_x`) * `_y`)),
-         rhs  = quote(`_x` ^ `_y`)),
+         rhs  = quote(`_x` ^ `_y`),
+         guard = function(b) .pow_base_safe(b[["_x"]])),
 
     # exp(_C + log(_x)) = exp(_C) * _x    — re-merge constants that
     # premature folding has lifted out of a log. Sound on the principal
     # branch via exp(a+b) = exp(a)*exp(b) and exp(log(z)) = z; no Im
     # constraint needed because the surrounding exp absorbs any 2πi
-    # ambiguity. The guard restricts _C to numeric/complex literals so
-    # the rule does not reorder symbolic expressions.
+    # ambiguity. Two guards:
+    # - _C must be a numeric/complex literal (so the rule does not
+    #   reorder symbolic expressions).
+    # - |Re(_C)| < 700 — beyond that, exp(_C) overflows to Inf or
+    #   underflows to 0 even though the unsimplified form
+    #   exp(_C + log(_x)) may evaluate finitely via cancellation.
     list(name = "C-exp-const-plus-log",
          lhs  = quote(exp(`_C` + log(`_x`))),
          rhs  = quote(exp(`_C`) * `_x`),
          guard = function(b) {
            v <- b[["_C"]]
            is.atomic(v) && length(v) == 1L &&
-             (is.numeric(v) || is.complex(v))
+             (is.numeric(v) || is.complex(v)) &&
+             abs(Re(as.complex(v))) < 700
          })
   )
 }
@@ -319,7 +386,8 @@ simplify_eml <- function(expr) {
 # unless the guard returns TRUE.
 .try_rules <- function(expr, rules) {
   for (rule in rules) {
-    bindings <- match_eml(expr, rule$lhs)
+    rule_tol <- if (is.null(rule$tol)) 0 else rule$tol
+    bindings <- match_eml(expr, rule$lhs, tol = rule_tol)
     if (!is.null(bindings)) {
       if (!is.null(rule$guard) && !isTRUE(rule$guard(bindings))) next
       return(list(expr = .subst_bindings(rule$rhs, bindings),
@@ -453,16 +521,23 @@ simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
 .euler_rules <- function() {
   ix     <- call("*", 0+1i, as.name("_x"))
   neg_ix <- call("-", ix)
+  # Tolerance ONLY on Euler patterns. The Euler RHSs need to match
+  # `0+1i` and `0+2i` against the residue of tree_i() = exp(log(-1)/2),
+  # which floats noise around 6.12e-17. Other rules use exact equality
+  # (the default tol = 0) so user-supplied literals like `1e-13` do
+  # not get matched against `0`.
   list(
     list(name = "E1",
          lhs  = call("/",
                      call("-", call("exp", ix), call("exp", neg_ix)),
                      0+2i),
-         rhs  = quote(sin(`_x`))),
+         rhs  = quote(sin(`_x`)),
+         tol  = 1e-12),
     list(name = "E2",
          lhs  = call("/",
                      call("+", call("exp", ix), call("exp", neg_ix)),
                      2),
-         rhs  = quote(cos(`_x`)))
+         rhs  = quote(cos(`_x`)),
+         tol  = 1e-12)
   )
 }

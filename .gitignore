@@ -36,3 +36,4 @@ Thumbs.db
 .claude/settings.local.json
 .claude/.runs
 .claude/scheduled_tasks.lock
+CONTINUE_HERE.md

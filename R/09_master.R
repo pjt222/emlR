@@ -47,6 +47,8 @@ master_n_params <- function(depth) {
 #' build_master(1)
 #' all.vars(build_master(2))
 #' @export
+# put id:"mas_build", label:"build_master (depth-n formula)", \
+#   node_type:"process", output:"master_formula.internal"
 build_master <- function(depth, var_name = "x") {
   if (depth < 1L) stop("build_master: depth must be >= 1.")
   slot_idx <- 0L
@@ -316,6 +318,12 @@ snap_master_params <- function(par, depth) {
 #' fit$snap_mse  # ~ 0 indicates exact symbolic recovery of log(x)
 #' }
 #' @export
+# put id:"mas_data", label:"Training data (x, y)", node_type:"input", \
+#   output:"data.internal"
+# put id:"mas_fit", label:"eml_fit (L-BFGS-B + Deriv gradient)", \
+#   node_type:"process", input:"data.internal,master_formula.internal", output:"theta_snap.internal"
+# put id:"mas_recover", label:"Recovered AST (snap to one-hot)", \
+#   node_type:"output", input:"theta_snap.internal"
 eml_fit <- function(x, y, depth = 3L,
                     parameterization = c("simplex", "direct"),
                     method = "L-BFGS-B", maxit = 1000L,

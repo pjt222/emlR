@@ -16,3 +16,4 @@
 ^\.gitignore$
 ^cran-comments\.md$
 ^CONTINUE_HERE\.md$
+^scripts$

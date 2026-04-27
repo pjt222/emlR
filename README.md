@@ -55,6 +55,59 @@ fit <- eml_fit(xs, log(xs), depth = 3, n_restarts = 10)
 fit$snap_mse                                                # ~0 ⇒ exact recovery
 ```
 
+## Workflow
+
+The pipeline below is auto-generated from `# put` annotations in
+`R/*.R` by [`putior`](https://CRAN.R-project.org/package=putior).
+Edit annotations next to the function definition; CI regenerates
+the diagram on every push to `main`.
+
+<!-- PUTIOR-WORKFLOW-START -->
+```mermaid
+flowchart LR
+    con_build(["Construct EML AST"])
+    ins_metrics[["Inspect: K, depth, RPN"]]
+    ev_eval[["eml_eval (one-off)"]]
+    bc_compile["compile_eml"]
+    bc_run[["run_bytecode (vectorised)"]]
+    simp_native["simplify_native (collapse to base R)"]
+    cat_catalog(["eml_catalog (18 primitives)"])
+    cat_verify[["verify_catalog"]]
+    mas_build["build_master (depth-n formula)"]
+    mas_data(["Training data (x, y)"])
+    mas_fit["eml_fit (L-BFGS-B + Deriv gradient)"]
+    mas_recover[["Recovered AST (snap to one-hot)"]]
+
+    %% Connections
+    con_build --> ins_metrics
+    con_build --> ev_eval
+    con_build --> bc_compile
+    bc_compile --> bc_run
+    con_build --> simp_native
+    cat_catalog --> cat_verify
+    mas_data --> mas_fit
+    mas_build --> mas_fit
+    mas_fit --> mas_recover
+
+    %% Styling
+    classDef inputStyle fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e40af
+    class con_build inputStyle
+    class cat_catalog inputStyle
+    class mas_data inputStyle
+    classDef processStyle fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#5b21b6
+    class bc_compile processStyle
+    class simp_native processStyle
+    class mas_build processStyle
+    class mas_fit processStyle
+    classDef outputStyle fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#15803d
+    class ins_metrics outputStyle
+    class ev_eval outputStyle
+    class bc_run outputStyle
+    class cat_verify outputStyle
+    class mas_recover outputStyle
+```
+<!-- PUTIOR-WORKFLOW-END -->
+
 ## What's in the box
 
 | | |

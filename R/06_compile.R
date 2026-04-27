@@ -36,6 +36,8 @@
 #' bc$consts           # 1+0i
 #' bc$vars             # "x"
 #' @export
+# put id:"bc_compile", label:"compile_eml", node_type:"process", \
+#   input:"ast.internal", output:"bytecode.internal"
 compile_eml <- function(expr) {
   if (!is_eml_expr(expr)) {
     stop("compile_eml: not an EML expression (",
@@ -144,6 +146,8 @@ compile_eml <- function(expr) {
 #' xs <- seq(0.5, 5, length.out = 30)
 #' Re(run_bytecode(bc, list(x = xs)))     # log(xs)
 #' @export
+# put id:"bc_run", label:"run_bytecode (vectorised)", node_type:"output", \
+#   input:"bytecode.internal"
 run_bytecode <- function(bc, vars = list()) {
   if (!is.list(vars)) {
     stop("run_bytecode: `vars` must be a (possibly empty) named list.")

@@ -31,6 +31,8 @@
 #'                list(x = xs), real = TRUE)
 #' max(abs(lx - log(xs)))
 #' @export
+# put id:"ev_eval", label:"eml_eval (one-off)", node_type:"output", \
+#   input:"ast.internal"
 eml_eval <- function(expr, vars = list(), real = FALSE, tol = 1e-8) {
   if (!is_eml_expr(expr)) {
     stop("eml_eval: `expr` must be an EML expression. ",

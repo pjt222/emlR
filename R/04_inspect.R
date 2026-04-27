@@ -23,6 +23,8 @@
 #' eml_K(quote(eml(x, 1)))                              # 3 (exp)
 #' eml_K(quote(eml(1, eml(eml(1, x), 1))))              # 7 (log, paper Eq. 5)
 #' @export
+# put id:"ins_metrics", label:"Inspect: K, depth, RPN", node_type:"output", \
+#   input:"ast.internal"
 eml_K <- function(expr) {
   if (is_eml_const(expr) || is_eml_var(expr)) return(1L)
   if (is_eml_call(expr)) {

@@ -8,6 +8,9 @@
 #  No custom S3 class. `class(expr)` is whatever R says.
 # =============================================================================
 
+# put id:"con_build", label:"Construct EML AST", node_type:"input", \
+#   output:"ast.internal"
+
 #' Construct a literal EML constant
 #'
 #' Identity on numeric/complex input; the literal is its own EML

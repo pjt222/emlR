@@ -470,6 +470,8 @@ simplify_eml <- function(expr) {
 #' simplify_native(quote(eml(1, eml(eml(1, x), 1))))             # log(x)
 #' simplify_native(quote(eml(log(a), exp(b))))                   # a - b
 #' @export
+# put id:"simp_native", label:"simplify_native (collapse to base R)", \
+#   node_type:"process", input:"ast.internal", output:"native_expr.internal"
 simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
   if (!.tree_uses_only_safe_heads(expr)) {
     stop("simplify_native: `expr` contains a call to a function that ",

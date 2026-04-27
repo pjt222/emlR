@@ -176,6 +176,8 @@ NULL
 #' names(cat)
 #' cat$log
 #' @export
+# put id:"cat_catalog", label:"eml_catalog (18 primitives)", \
+#   node_type:"input", output:"catalog_ast.internal"
 eml_catalog <- function() {
   list(
     one     = tree_one(),
@@ -237,6 +239,8 @@ eml_catalog <- function() {
 #' @examples
 #' verify_catalog()
 #' @export
+# put id:"cat_verify", label:"verify_catalog", node_type:"output", \
+#   input:"catalog_ast.internal"
 verify_catalog <- function(tol = 1e-8, verbose = TRUE) {
   spec <- .catalog_test_vars()
   catalog <- eml_catalog()

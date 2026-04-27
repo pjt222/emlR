@@ -14,6 +14,13 @@ match_eml(expr, pattern, bindings = list(), tol = 0)
 \item{bindings}{named list of meta-variable bindings to extend
 (used by the recursive walk; callers usually leave this at the
 default empty list).}
+
+\item{tol}{numeric tolerance for atomic numeric/complex equality.
+Default \code{0} (exact match). Rule-controlled: only the Euler
+patterns set this above zero so they can absorb the round-off
+in \code{tree_i() = exp(log(-1)/2)} (\code{6.12e-17 + 1i}); other rules
+use exact equality so user-supplied small constants are not
+silently matched against rule literals.}
 }
 \value{
 Named list of bindings (possibly empty if the pattern has no

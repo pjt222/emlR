@@ -38,6 +38,12 @@
 #' @param bindings named list of meta-variable bindings to extend
 #'   (used by the recursive walk; callers usually leave this at the
 #'   default empty list).
+#' @param tol numeric tolerance for atomic numeric/complex equality.
+#'   Default `0` (exact match). Rule-controlled: only the Euler
+#'   patterns set this above zero so they can absorb the round-off
+#'   in `tree_i() = exp(log(-1)/2)` (`6.12e-17 + 1i`); other rules
+#'   use exact equality so user-supplied small constants are not
+#'   silently matched against rule literals.
 #' @return Named list of bindings (possibly empty if the pattern has no
 #'   meta-variables but matches), or `NULL` on no match.
 #' @examples

@@ -35,3 +35,4 @@ Thumbs.db
 # Claude Code per-user settings (CLAUDE.md is committed)
 .claude/settings.local.json
 .claude/.runs
+.claude/scheduled_tasks.lock

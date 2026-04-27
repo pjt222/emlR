@@ -91,6 +91,36 @@ corresponding base-R primitive.
 Pre-release (0.1.0 in development). Targeting 0.1.0 as the first CRAN
 submission.
 
+## Scope and limitations
+
+What this release covers and what it does not:
+
+* **Variables.** Univariate and bivariate expressions are tested
+  exhaustively (every catalog entry, the SR fitter, the bytecode
+  evaluator). The infrastructure does not preclude `x, y, z, ...`
+  but cases beyond two variables are not part of the test surface.
+* **Operator family.** Only the EML operator `eml(x, y) = exp(x) − log(y)`
+  is implemented. The EDL variant `exp(x) / log(y)` and the swapped
+  form `−eml(y, x)` from the paper Eq. (4b/4c) are out of scope for
+  this release.
+* **Symbolic regression.** `eml_fit()` uses the paper's master-formula
+  approach with L-BFGS-B + analytic gradients. Tree-topology search
+  (genetic-programming style) is not provided; the master formula at
+  fixed depth is sufficient for reproducing the paper's results.
+* **Acceleration.** Pure base R + `Deriv`. No Rcpp, no `torch`, no
+  parallelisation. The bytecode evaluator vectorises over input
+  bindings within a single R loop, which is fast enough for the
+  paper's reproducibility scale; it is not a benchmark machine.
+* **Branch semantics.** Everything is on the principal complex
+  branch (`log(-1) = iπ`). Multi-valued or alternative-branch
+  evaluation is not supported.
+* **Numerical tolerance.** The simplifier's atomic-equality check
+  uses a `1e-12` tolerance to absorb round-off from complex
+  `exp`/`log` chains in catalog constructions like
+  `tree_i() = exp(log(-1)/2)`. User constants below that magnitude
+  are preserved unless paired with a dominantly large component;
+  see `?simplify_native` for the full rule.
+
 ## Citation
 
 If you use emlR in published work, please cite both the paper and the

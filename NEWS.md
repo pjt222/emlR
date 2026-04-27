@@ -62,6 +62,23 @@ generates all elementary functions on the principal branch.
     from `tree_i() = exp(log(-1)/2)` (which yields `6.12e-17 + 1i`,
     not exact `0+1i`).
 
+## Scope and intentional non-goals
+
+For 0.1.0, the package deliberately scopes to:
+
+* **Two variables.** Univariate and bivariate expressions are the
+  tested surface; more variables are not precluded but not exercised.
+* **EML only.** The EDL variant `exp(x) / log(y)` and `−eml(y, x)`
+  (paper Eq. 4b/4c) are deferred.
+* **Master-formula SR.** No tree-topology / genetic-programming
+  search. `eml_fit()` operates over the paper's master formula at
+  fixed depth.
+* **Pure R + Deriv.** No Rcpp / `torch` / parallelisation. The
+  bytecode loop vectorises over input bindings; no further hot-path
+  acceleration.
+* **Principal branch only.** Multi-valued / alternative-branch
+  semantics are out of scope.
+
 ## Reference materials
 
 The `reference/` directory at the project root (excluded from the

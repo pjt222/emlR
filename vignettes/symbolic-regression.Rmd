@@ -162,6 +162,16 @@ problem.
   is enough for `exp`, `log`, `e`, and several derived forms. Higher
   depths reach the longer constructions in the paper's Table 4.
 
+## What this fitter is, and is not
+
+`eml_fit()` implements the paper's master-formula SR approach: every
+internal node is `eml`, every leaf is a softmax over `{x, y, 1}`, and
+depth is fixed up front. Only the leaf weights are optimised; tree
+*topology* is fixed by `depth`. Genetic-programming-style topology
+search across the EML grammar is out of scope for this release — the
+bytecode evaluator and catalog provide the building blocks if you want
+to layer your own search loop on top.
+
 ## References
 
 Odrzywołek, A. (2026). *All elementary functions from a single binary

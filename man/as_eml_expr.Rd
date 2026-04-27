@@ -22,8 +22,8 @@ converted via \code{\link[=as.name]{as.name()}}.}
 }
 }
 \details{
-Note that, unlike v1's \code{as_eml_tree}, length-1 numerics are NOT
-wrapped — the literal \code{2} \emph{is} a valid EML expression.
+Length-1 numerics are NOT wrapped — the literal \code{2} is itself a
+valid EML expression.
 }
 \examples{
 as_eml_expr(2)

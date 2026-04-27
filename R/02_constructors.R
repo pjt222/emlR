@@ -70,8 +70,8 @@ eml_node <- function(left, right) {
 #'   \item{anything else}{error.}
 #' }
 #'
-#' Note that, unlike v1's `as_eml_tree`, length-1 numerics are NOT
-#' wrapped — the literal `2` *is* a valid EML expression.
+#' Length-1 numerics are NOT wrapped — the literal `2` is itself a
+#' valid EML expression.
 #'
 #' @param x input to coerce.
 #' @return An EML expression (literal, name, or call).

@@ -12,6 +12,24 @@ template:
     primary: "#0054AD"
     base_font: {google: "Source Sans Pro"}
     code_font: {google: "JetBrains Mono"}
+  includes:
+    in_header: |
+      <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        // pandoc emits ```mermaid as <pre><code class="language-mermaid">…</code></pre>
+        // or <pre class="mermaid"><code>…</code></pre>. Both forms — unwrap to
+        // <pre class="mermaid">raw text</pre> so mermaid v10 picks them up.
+        document.addEventListener('DOMContentLoaded', () => {
+          document.querySelectorAll(
+            'pre > code.language-mermaid, pre.mermaid > code'
+          ).forEach(code => {
+            const pre = code.parentElement;
+            pre.classList.add('mermaid');
+            pre.textContent = code.textContent;
+          });
+          mermaid.initialize({ startOnLoad: true });
+        });
+      </script>
 
 home:
   title: "emlR — All elementary functions from a single binary operator"

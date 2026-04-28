@@ -20,7 +20,7 @@
 
 The paper proves a remarkable result: the single binary operator
 
-$$\mathrm{eml}(x, y) \;=\; \exp(x) - \ln(y)$$
+$$\mathrm{eml}(x, y) = \exp(x) - \ln(y)$$
 
 together with the constant `1`, generates **every elementary function** —
 sums, products, powers, logarithms, trigonometric functions, π, *i*, the

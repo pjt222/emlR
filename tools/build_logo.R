@@ -30,7 +30,7 @@ set.seed(2603)  # arXiv prefix of Odrzywolek (2026)
 # kept hand-written for transparency.
 
 # ---- background: ambient perlin noise raster, hex-clipped ----------------
-grid_n <- 400
+grid_n <- 2222
 noise_grid <- long_grid(
   x = seq(-sqrt(3)/2, sqrt(3)/2, length.out = grid_n),
   y = seq(-1,         1,         length.out = grid_n)
@@ -41,7 +41,7 @@ noise_grid$value <- gen_perlin(
 ) +
   0.6 * gen_perlin(
     noise_grid$x, noise_grid$y,
-    frequency = 4.0, seed = 2026
+    frequency = 8.0, seed = 2026
   )
 
 # Drop pixels outside the hex (point-in-polygon via simple bound test on
@@ -57,7 +57,7 @@ noise_grid <- noise_grid[inside_hex(noise_grid$x, noise_grid$y), ]
 curve_x <- seq(-1.2, 1.2, length.out = 400)
 exp_curve <- data.frame(
   x = curve_x,
-  y = (exp(curve_x) - 1) / 3   # rescaled so it fits the hex
+  y = (exp(curve_x) - 2) / 3   # rescaled so it fits the hex
 )
 log_curve <- data.frame(
   x = curve_x[curve_x > 0.05],
@@ -102,19 +102,24 @@ p <- ggplot() +
   # its own line as a visual hinge between definiendum and definiens.
   with_outer_glow(
     geom_richtext(
-      aes(x = 0, y = 0.10),
+      aes(x = -0.15, y = 0.15),
       label = paste0(
-        "eml(x,&thinsp;y)<br>",
-        "=<br>",
+        "eml(x,&thinsp;y)",
+        "<br>",
+        # "<br>",
+        " = ",
+        # "<br>",
+        "<br>",
         "e<sup>x</sup> &minus; ln&thinsp;y"
       ),
       colour = "white",
       fill   = NA,
       label.colour = NA,
-      family = "sans",
-      size   = 6.5,
+      family = "mono",
+      size   = 5,
       fontface = "bold",
-      lineheight = 1.0
+      lineheight = 1.0,
+      angle = 30
     ),
     colour = pal_high,
     sigma  = 8,
@@ -123,13 +128,14 @@ p <- ggplot() +
   # Wordmark
   with_outer_glow(
     geom_richtext(
-      aes(x = 0, y = -0.70),
+      aes(x = 0.50, y = -0.50),
       label = "**emlR**",
       colour = "white",
       fill   = NA,
       label.colour = NA,
       family = "sans",
-      size   = 7
+      size   = 5,
+      angle = 30
     ),
     colour = pal_high,
     sigma  = 6,

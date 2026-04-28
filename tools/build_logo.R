@@ -4,7 +4,7 @@
 # `man/figures/logo.png`. Not invoked at install or check time.
 #
 # Required packages (build-only, intentionally NOT in DESCRIPTION):
-#   ggplot2, ambient, ggtext, ggfx, grid, ragg
+#   ggplot2, ggforce, ambient, ggtext, ggfx, grid, ragg
 #
 # Run:
 #   Rscript tools/build_logo.R
@@ -14,6 +14,7 @@
 
 suppressPackageStartupMessages({
   library(ggplot2)
+  library(ggforce)
   library(ambient)
   library(ggtext)
   library(ggfx)
@@ -23,10 +24,10 @@ suppressPackageStartupMessages({
 set.seed(2603)  # arXiv prefix of Odrzywolek (2026)
 
 # ---- hex geometry ---------------------------------------------------------
-# Point-up hex; flat width = sqrt(3), height = 2.
-hex_x <- c(0,  sqrt(3)/2,  sqrt(3)/2,  0, -sqrt(3)/2, -sqrt(3)/2)
-hex_y <- c(1,  0.5,       -0.5,      -1, -0.5,         0.5)
-hex_poly <- data.frame(x = hex_x, y = hex_y)
+# The hex stroke itself is drawn by ggforce::geom_regon() further below.
+# `inside_hex()` (defined after the noise grid) is the data-side predicate
+# used to clip the perlin raster — that is filtering, not graphics, and is
+# kept hand-written for transparency.
 
 # ---- background: ambient perlin noise raster, hex-clipped ----------------
 grid_n <- 400
@@ -134,15 +135,22 @@ p <- ggplot() +
     sigma  = 6,
     expand = 4
   ) +
-  # Hex frame stroke
-  geom_polygon(
-    data = hex_poly,
-    aes(x, y),
+  # Hex frame stroke — native ggforce regular-polygon primitive. ggforce
+  # places a vertex at angle `angle` (default = 0 ⇒ vertex at 3 o'clock,
+  # i.e. flat-top with vertices left/right). Adding pi/2 rotates by 90°
+  # to put the vertex at 12 o'clock (point-up) so the stroke aligns with
+  # the `inside_hex()` predicate that clips the perlin raster.
+  geom_regon(
+    aes(x0 = 0, y0 = 0, r = 1, sides = 6, angle = pi / 2),
     fill   = NA,
     colour = "white",
     linewidth = 1.6
   ) +
-  coord_fixed(xlim = c(-sqrt(3)/2, sqrt(3)/2), ylim = c(-1, 1), expand = FALSE) +
+  # xlim/ylim are padded beyond the hex bounding box (half-width sqrt(3)/2,
+  # half-height 1) so the 1.6mm stroke is not rasterised away at the panel
+  # edge. Without this padding the left/right vertices lose ~50% of their
+  # stroke width on export.
+  coord_fixed(xlim = c(-1.00, 1.00), ylim = c(-1.10, 1.10), expand = FALSE) +
   theme_void() +
   theme(
     plot.background  = element_rect(fill = "transparent", colour = NA),

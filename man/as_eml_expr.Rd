@@ -30,3 +30,11 @@ as_eml_expr(2)
 as_eml_expr("x")
 as_eml_expr(quote(eml(1, x)))
 }
+\seealso{
+Other eml_constructors: 
+\code{\link{E}()},
+\code{\link{eml_const}()},
+\code{\link{eml_node}()},
+\code{\link{eml_var}()}
+}
+\concept{eml_constructors}

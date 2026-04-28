@@ -162,6 +162,10 @@ tree_cos <- function(x = "x") {
 #' tree_exp("x")    # eml(x, 1)
 #' tree_add("x", "y")
 #' simplify_native(tree_log("x"))   # log(x)
+#' @seealso [eml_catalog()] for the catalog as a named list,
+#'   [verify_catalog()] for end-to-end numerical verification, and
+#'   [simplify_native()] for collapsing these expressions to base-R
+#'   primitives.
 NULL
 
 #' All catalog identities as a named list
@@ -175,6 +179,8 @@ NULL
 #' cat <- eml_catalog()
 #' names(cat)
 #' cat$log
+#' @seealso [tree_identities] for the individual constructors;
+#'   [verify_catalog()] for end-to-end numerical verification.
 #' @export
 # put id:"cat_catalog", label:"eml_catalog (18 primitives)", \
 #   node_type:"input", output:"catalog_ast.internal"
@@ -238,6 +244,9 @@ eml_catalog <- function() {
 #' @return Invisibly, a logical scalar (`TRUE` iff every entry passed).
 #' @examples
 #' verify_catalog()
+#' @seealso [eml_catalog()] for the catalog itself; [simplify_native()]
+#'   for the structural verifier (every entry should collapse to its
+#'   base-R primitive).
 #' @export
 # put id:"cat_verify", label:"verify_catalog", node_type:"output", \
 #   input:"catalog_ast.internal"

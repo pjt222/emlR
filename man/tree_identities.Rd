@@ -90,3 +90,9 @@ tree_exp("x")    # eml(x, 1)
 tree_add("x", "y")
 simplify_native(tree_log("x"))   # log(x)
 }
+\seealso{
+\code{\link[=eml_catalog]{eml_catalog()}} for the catalog as a named list,
+\code{\link[=verify_catalog]{verify_catalog()}} for end-to-end numerical verification, and
+\code{\link[=simplify_native]{simplify_native()}} for collapsing these expressions to base-R
+primitives.
+}

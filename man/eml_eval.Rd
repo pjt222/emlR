@@ -40,3 +40,7 @@ lx <- eml_eval(quote(eml(1, eml(eml(1, x), 1))),
                list(x = xs), real = TRUE)
 max(abs(lx - log(xs)))
 }
+\seealso{
+\code{\link[=compile_eml]{compile_eml()}} / \code{\link[=run_bytecode]{run_bytecode()}} for the vectorised
+stack-machine evaluator with the same semantics.
+}

@@ -19,3 +19,11 @@ Returns an R \code{name} (symbol). Accepts a string or an existing name.
 eml_var("x")
 identical(eml_var("x"), eml_var(as.name("x")))
 }
+\seealso{
+Other eml_constructors: 
+\code{\link{E}()},
+\code{\link{as_eml_expr}()},
+\code{\link{eml_const}()},
+\code{\link{eml_node}()}
+}
+\concept{eml_constructors}

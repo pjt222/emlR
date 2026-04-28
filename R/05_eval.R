@@ -30,6 +30,8 @@
 #' lx <- eml_eval(quote(eml(1, eml(eml(1, x), 1))),
 #'                list(x = xs), real = TRUE)
 #' max(abs(lx - log(xs)))
+#' @seealso [compile_eml()] / [run_bytecode()] for the vectorised
+#'   stack-machine evaluator with the same semantics.
 #' @export
 # put id:"ev_eval", label:"eml_eval (one-off)", node_type:"output", \
 #   input:"ast.internal"

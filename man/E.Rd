@@ -21,3 +21,11 @@ v1-style constructions read identically:
 \examples{
 E(1, E(E(1, "x"), 1))
 }
+\seealso{
+Other eml_constructors: 
+\code{\link{as_eml_expr}()},
+\code{\link{eml_const}()},
+\code{\link{eml_node}()},
+\code{\link{eml_var}()}
+}
+\concept{eml_constructors}

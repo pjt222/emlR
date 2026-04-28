@@ -21,6 +21,7 @@
 #' @examples
 #' eml_const(1)
 #' eml_const(0+1i)
+#' @family eml_constructors
 #' @export
 eml_const <- function(value = 1) {
   if (!(is.numeric(value) || is.complex(value)) || length(value) != 1L) {
@@ -38,6 +39,7 @@ eml_const <- function(value = 1) {
 #' @examples
 #' eml_var("x")
 #' identical(eml_var("x"), eml_var(as.name("x")))
+#' @family eml_constructors
 #' @export
 eml_var <- function(name = "x") {
   if (is.name(name)) return(name)
@@ -58,6 +60,7 @@ eml_var <- function(name = "x") {
 #' @examples
 #' eml_node(1, "x")                                    # eml(1, x)
 #' eml_node(1, eml_node(eml_node(1, "x"), 1))          # paper Eq. 5
+#' @family eml_constructors
 #' @export
 eml_node <- function(left, right) {
   call("eml", as_eml_expr(left), as_eml_expr(right))
@@ -82,6 +85,7 @@ eml_node <- function(left, right) {
 #' as_eml_expr(2)
 #' as_eml_expr("x")
 #' as_eml_expr(quote(eml(1, x)))
+#' @family eml_constructors
 #' @export
 as_eml_expr <- function(x) {
   if (is.call(x)) return(x)
@@ -103,5 +107,6 @@ as_eml_expr <- function(x) {
 #' @return A `call`.
 #' @examples
 #' E(1, E(E(1, "x"), 1))
+#' @family eml_constructors
 #' @export
 E <- function(left, right) eml_node(left, right)

@@ -19,3 +19,7 @@ cat <- eml_catalog()
 names(cat)
 cat$log
 }
+\seealso{
+\link{tree_identities} for the individual constructors;
+\code{\link[=verify_catalog]{verify_catalog()}} for end-to-end numerical verification.
+}

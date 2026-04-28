@@ -30,3 +30,7 @@ bc <- compile_eml(quote(eml(1, eml(eml(1, x), 1))))
 xs <- seq(0.5, 5, length.out = 30)
 Re(run_bytecode(bc, list(x = xs)))     # log(xs)
 }
+\seealso{
+\code{\link[=compile_eml]{compile_eml()}} for producing the bytecode object;
+\code{\link[=eml_eval]{eml_eval()}} for the slower tree-walking evaluator.
+}

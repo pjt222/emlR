@@ -23,3 +23,8 @@ require the simplifier to recognise the structural form.
 \examples{
 verify_catalog()
 }
+\seealso{
+\code{\link[=eml_catalog]{eml_catalog()}} for the catalog itself; \code{\link[=simplify_native]{simplify_native()}}
+for the structural verifier (every entry should collapse to its
+base-R primitive).
+}

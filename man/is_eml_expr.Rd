@@ -23,3 +23,10 @@ is_eml_expr(quote(x))
 is_eml_expr(quote(eml(1, x)))
 is_eml_expr(quote(x + y))     # FALSE
 }
+\seealso{
+Other eml_predicates: 
+\code{\link{is_eml_call}()},
+\code{\link{is_eml_const}()},
+\code{\link{is_eml_var}()}
+}
+\concept{eml_predicates}

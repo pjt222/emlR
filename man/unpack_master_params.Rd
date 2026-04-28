@@ -25,3 +25,13 @@ v <- runif(master_n_params(2))
 bindings <- unpack_master_params(v, 2)
 names(bindings)
 }
+\seealso{
+Other eml_master: 
+\code{\link{build_master}()},
+\code{\link{eml_fit}()},
+\code{\link{master_n_params}()},
+\code{\link{snap_master_params}()},
+\code{\link{theta_for_exp}()},
+\code{\link{theta_for_log}()}
+}
+\concept{eml_master}

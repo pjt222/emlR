@@ -123,6 +123,10 @@ match_eml <- function(expr, pattern, bindings = list(), tol = 0) {
 #' simplify_eml(quote(eml(1, 1)))          # numeric e (folded)
 #' simplify_eml(quote(eml(x, 1)))          # unchanged
 #' simplify_eml(quote(eml(x, eml(1, 1))))  # eml(x, e)
+#' @seealso [simplify_native()] for the mode that collapses to base-R
+#'   primitives (use this for inspection/verification; use
+#'   `simplify_eml` for SR training where the EML grammar must be
+#'   preserved for completeness).
 #' @export
 simplify_eml <- function(expr) {
   if (!.tree_uses_only_safe_heads(expr)) {
@@ -469,6 +473,9 @@ simplify_eml <- function(expr) {
 #' simplify_native(quote(eml(x, 1)))                            # exp(x)
 #' simplify_native(quote(eml(1, eml(eml(1, x), 1))))             # log(x)
 #' simplify_native(quote(eml(log(a), exp(b))))                   # a - b
+#' @seealso [simplify_eml()] for the mode that stays inside the EML
+#'   grammar (constant folding only); [eml_catalog()] / [verify_catalog()]
+#'   for the test surface this rule set is tuned against.
 #' @export
 # put id:"simp_native", label:"simplify_native (collapse to base R)", \
 #   node_type:"process", input:"ast.internal", output:"native_expr.internal"

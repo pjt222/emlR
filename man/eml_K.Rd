@@ -27,3 +27,12 @@ eml_K(quote(eml(1, 1)))                              # 3 (e)
 eml_K(quote(eml(x, 1)))                              # 3 (exp)
 eml_K(quote(eml(1, eml(eml(1, x), 1))))              # 7 (log, paper Eq. 5)
 }
+\seealso{
+\code{\link[=eml_leafcount]{eml_leafcount()}} for v1's leaf-only count.
+
+Other eml_inspectors: 
+\code{\link{eml_depth}()},
+\code{\link{eml_leafcount}()},
+\code{\link{eml_rpn}()}
+}
+\concept{eml_inspectors}

@@ -17,3 +17,13 @@ left input \code{x} (slot 1: alpha=0, beta=1), right input \code{1}
 \examples{
 theta_for_exp()
 }
+\seealso{
+Other eml_master: 
+\code{\link{build_master}()},
+\code{\link{eml_fit}()},
+\code{\link{master_n_params}()},
+\code{\link{snap_master_params}()},
+\code{\link{theta_for_log}()},
+\code{\link{unpack_master_params}()}
+}
+\concept{eml_master}

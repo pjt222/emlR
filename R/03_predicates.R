@@ -15,6 +15,7 @@
 #' is_eml_expr(quote(x))
 #' is_eml_expr(quote(eml(1, x)))
 #' is_eml_expr(quote(x + y))     # FALSE
+#' @family eml_predicates
 #' @export
 is_eml_expr <- function(x) {
   if (is_eml_const(x)) return(TRUE)
@@ -46,6 +47,7 @@ is_eml_expr <- function(x) {
 #' is_eml_call(quote(eml(1, x)))
 #' is_eml_call(quote(eml(1, x + y)))   # TRUE structurally; children not checked
 #' is_eml_call(quote(x + y))            # FALSE
+#' @family eml_predicates
 #' @export
 is_eml_call <- function(x) {
   is.call(x) &&
@@ -61,6 +63,7 @@ is_eml_call <- function(x) {
 #' is_eml_const(0+1i)             # TRUE
 #' is_eml_const(c(1, 2))          # FALSE — length-2 vector
 #' is_eml_const(quote(x))         # FALSE — name
+#' @family eml_predicates
 #' @export
 is_eml_const <- function(x) {
   (is.numeric(x) || is.complex(x)) && length(x) == 1L
@@ -73,6 +76,7 @@ is_eml_const <- function(x) {
 #' is_eml_var(quote(x))           # TRUE
 #' is_eml_var(1)                  # FALSE — numeric
 #' is_eml_var(quote(eml(1, x)))   # FALSE — call
+#' @family eml_predicates
 #' @export
 is_eml_var <- function(x) {
   is.name(x)

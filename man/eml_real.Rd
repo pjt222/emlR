@@ -23,3 +23,6 @@ imaginary residue is below \code{tol}. Set \code{tol = NA} to skip the check.
 eml_real(1, 1)               # e ~ 2.718
 eml_real(0.5, 1)             # exp(0.5)
 }
+\seealso{
+\code{\link[=eml]{eml()}} for the underlying complex-domain operator.
+}

@@ -45,3 +45,8 @@ simplify_native(quote(eml(x, 1)))                            # exp(x)
 simplify_native(quote(eml(1, eml(eml(1, x), 1))))             # log(x)
 simplify_native(quote(eml(log(a), exp(b))))                   # a - b
 }
+\seealso{
+\code{\link[=simplify_eml]{simplify_eml()}} for the mode that stays inside the EML
+grammar (constant folding only); \code{\link[=eml_catalog]{eml_catalog()}} / \code{\link[=verify_catalog]{verify_catalog()}}
+for the test surface this rule set is tuned against.
+}

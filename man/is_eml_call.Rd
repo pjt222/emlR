@@ -22,3 +22,10 @@ is_eml_call(quote(eml(1, x)))
 is_eml_call(quote(eml(1, x + y)))   # TRUE structurally; children not checked
 is_eml_call(quote(x + y))            # FALSE
 }
+\seealso{
+Other eml_predicates: 
+\code{\link{is_eml_const}()},
+\code{\link{is_eml_expr}()},
+\code{\link{is_eml_var}()}
+}
+\concept{eml_predicates}

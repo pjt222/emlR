@@ -22,6 +22,8 @@
 #' eml_K(quote(eml(1, 1)))                              # 3 (e)
 #' eml_K(quote(eml(x, 1)))                              # 3 (exp)
 #' eml_K(quote(eml(1, eml(eml(1, x), 1))))              # 7 (log, paper Eq. 5)
+#' @family eml_inspectors
+#' @seealso [eml_leafcount()] for v1's leaf-only count.
 #' @export
 # put id:"ins_metrics", label:"Inspect: K, depth, RPN", node_type:"output", \
 #   input:"ast.internal"
@@ -44,6 +46,8 @@ eml_K <- function(expr) {
 #' @return Integer scalar.
 #' @examples
 #' eml_leafcount(quote(eml(1, eml(eml(1, x), 1))))      # 4 (v1 behaviour)
+#' @family eml_inspectors
+#' @seealso [eml_K()] for the paper's total node count.
 #' @export
 eml_leafcount <- function(expr) {
   if (is_eml_const(expr) || is_eml_var(expr)) return(1L)
@@ -64,6 +68,7 @@ eml_leafcount <- function(expr) {
 #' @examples
 #' eml_depth(quote(eml(x, 1)))                          # 1
 #' eml_depth(quote(eml(1, eml(eml(1, x), 1))))          # 3
+#' @family eml_inspectors
 #' @export
 eml_depth <- function(expr) {
   if (is_eml_const(expr) || is_eml_var(expr)) return(0L)
@@ -86,6 +91,7 @@ eml_depth <- function(expr) {
 #' @examples
 #' eml_rpn(quote(eml(x, 1)))                            # "x 1 E"
 #' eml_rpn(quote(eml(1, eml(eml(1, x), 1))))            # "1 1 x E 1 E E"
+#' @family eml_inspectors
 #' @export
 eml_rpn <- function(expr) {
   if (is_eml_const(expr)) return(format(expr))

@@ -25,6 +25,7 @@
 #' master_n_params(1)   # 4
 #' master_n_params(2)   # 14
 #' master_n_params(3)   # 34
+#' @family eml_master
 #' @export
 master_n_params <- function(depth) {
   if (depth < 1L) stop("master_n_params: depth must be >= 1.")
@@ -46,6 +47,7 @@ master_n_params <- function(depth) {
 #' @examples
 #' build_master(1)
 #' all.vars(build_master(2))
+#' @family eml_master
 #' @export
 # put id:"mas_build", label:"build_master (depth-n formula)", \
 #   node_type:"process", output:"master_formula.internal"
@@ -88,6 +90,7 @@ build_master <- function(depth, var_name = "x") {
 #' v <- runif(master_n_params(2))
 #' bindings <- unpack_master_params(v, 2)
 #' names(bindings)
+#' @family eml_master
 #' @export
 unpack_master_params <- function(par, depth) {
   if (length(par) != master_n_params(depth)) {
@@ -152,6 +155,7 @@ unpack_master_params <- function(par, depth) {
 #' @return Numeric vector of length 4.
 #' @examples
 #' theta_for_exp()
+#' @family eml_master
 #' @export
 theta_for_exp <- function() {
   .slots_to_par(list(c(0, 1), c(1, 0)), depth = 1L)
@@ -166,6 +170,7 @@ theta_for_exp <- function() {
 #' @return Numeric vector of length 34.
 #' @examples
 #' length(theta_for_log())          # 34 — matches master_n_params(3)
+#' @family eml_master
 #' @export
 theta_for_log <- function() {
   use_one_inner    <- c(1, 0, 0)
@@ -236,6 +241,7 @@ theta_for_log <- function() {
 #' theta <- theta_for_exp()
 #' snapped <- snap_master_params(theta, depth = 1)
 #' identical(snapped, theta)        # already one-hot
+#' @family eml_master
 #' @export
 snap_master_params <- function(par, depth) {
   if (length(par) != master_n_params(depth)) {
@@ -317,6 +323,7 @@ snap_master_params <- function(par, depth) {
 #'                maxit = 200, seed = 1)
 #' fit$snap_mse  # ~ 0 indicates exact symbolic recovery of log(x)
 #' }
+#' @family eml_master
 #' @export
 # put id:"mas_data", label:"Training data (x, y)", node_type:"input", \
 #   output:"data.internal"

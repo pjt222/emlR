@@ -26,3 +26,13 @@ left-subtree first, then root's right-subtree).
 build_master(1)
 all.vars(build_master(2))
 }
+\seealso{
+Other eml_master: 
+\code{\link{eml_fit}()},
+\code{\link{master_n_params}()},
+\code{\link{snap_master_params}()},
+\code{\link{theta_for_exp}()},
+\code{\link{theta_for_log}()},
+\code{\link{unpack_master_params}()}
+}
+\concept{eml_master}

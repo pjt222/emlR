@@ -25,3 +25,13 @@ theta <- theta_for_exp()
 snapped <- snap_master_params(theta, depth = 1)
 identical(snapped, theta)        # already one-hot
 }
+\seealso{
+Other eml_master: 
+\code{\link{build_master}()},
+\code{\link{eml_fit}()},
+\code{\link{master_n_params}()},
+\code{\link{theta_for_exp}()},
+\code{\link{theta_for_log}()},
+\code{\link{unpack_master_params}()}
+}
+\concept{eml_master}

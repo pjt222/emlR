@@ -54,3 +54,13 @@ fit <- eml_fit(xs, ys, depth = 3, n_restarts = 2,
 fit$snap_mse  # ~ 0 indicates exact symbolic recovery of log(x)
 }
 }
+\seealso{
+Other eml_master: 
+\code{\link{build_master}()},
+\code{\link{master_n_params}()},
+\code{\link{snap_master_params}()},
+\code{\link{theta_for_exp}()},
+\code{\link{theta_for_log}()},
+\code{\link{unpack_master_params}()}
+}
+\concept{eml_master}

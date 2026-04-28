@@ -20,3 +20,10 @@ is_eml_var(quote(x))           # TRUE
 is_eml_var(1)                  # FALSE — numeric
 is_eml_var(quote(eml(1, x)))   # FALSE — call
 }
+\seealso{
+Other eml_predicates: 
+\code{\link{is_eml_call}()},
+\code{\link{is_eml_const}()},
+\code{\link{is_eml_expr}()}
+}
+\concept{eml_predicates}

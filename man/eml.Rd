@@ -23,3 +23,7 @@ eml(1, 1)                    # exp(1) - log(1) = e
 eml(0, -1)                   # 1 - i*pi    (principal-branch log)
 Re(eml(-Inf, exp(1)))        # -1, via extended-real semantics
 }
+\seealso{
+\code{\link[=eml_real]{eml_real()}} for the real-valued wrapper, \code{\link[=eml_eval]{eml_eval()}} for
+evaluating an EML expression with variable bindings.
+}

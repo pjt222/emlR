@@ -20,3 +20,12 @@ is total node count, so prefer \code{\link[=eml_K]{eml_K()}} in new code.
 \examples{
 eml_leafcount(quote(eml(1, eml(eml(1, x), 1))))      # 4 (v1 behaviour)
 }
+\seealso{
+\code{\link[=eml_K]{eml_K()}} for the paper's total node count.
+
+Other eml_inspectors: 
+\code{\link{eml_K}()},
+\code{\link{eml_depth}()},
+\code{\link{eml_rpn}()}
+}
+\concept{eml_inspectors}

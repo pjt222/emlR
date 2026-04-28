@@ -17,3 +17,13 @@ choose the literal \code{1} or the input \code{x} per the structure.
 \examples{
 length(theta_for_log())          # 34 — matches master_n_params(3)
 }
+\seealso{
+Other eml_master: 
+\code{\link{build_master}()},
+\code{\link{eml_fit}()},
+\code{\link{master_n_params}()},
+\code{\link{snap_master_params}()},
+\code{\link{theta_for_exp}()},
+\code{\link{unpack_master_params}()}
+}
+\concept{eml_master}

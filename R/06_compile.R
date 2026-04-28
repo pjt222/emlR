@@ -35,6 +35,8 @@
 #' bc$ops              # 0 0 1 2 0 2 2
 #' bc$consts           # 1+0i
 #' bc$vars             # "x"
+#' @seealso [run_bytecode()] for executing the compiled output;
+#'   [eml_eval()] for the slower tree-walking evaluator.
 #' @export
 # put id:"bc_compile", label:"compile_eml", node_type:"process", \
 #   input:"ast.internal", output:"bytecode.internal"
@@ -145,6 +147,8 @@ compile_eml <- function(expr) {
 #' bc <- compile_eml(quote(eml(1, eml(eml(1, x), 1))))
 #' xs <- seq(0.5, 5, length.out = 30)
 #' Re(run_bytecode(bc, list(x = xs)))     # log(xs)
+#' @seealso [compile_eml()] for producing the bytecode object;
+#'   [eml_eval()] for the slower tree-walking evaluator.
 #' @export
 # put id:"bc_run", label:"run_bytecode (vectorised)", node_type:"output", \
 #   input:"bytecode.internal"

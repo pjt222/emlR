@@ -22,3 +22,10 @@ Returns a single space-separated string. Constants are formatted via
 eml_rpn(quote(eml(x, 1)))                            # "x 1 E"
 eml_rpn(quote(eml(1, eml(eml(1, x), 1))))            # "1 1 x E 1 E E"
 }
+\seealso{
+Other eml_inspectors: 
+\code{\link{eml_K}()},
+\code{\link{eml_depth}()},
+\code{\link{eml_leafcount}()}
+}
+\concept{eml_inspectors}

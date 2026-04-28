@@ -96,17 +96,24 @@ p <- ggplot() +
     alpha  = 0.30,
     linewidth = 0.7
   ) +
-  # Glowing formula at the centre
+  # Glowing formula at the centre — three lines so the full identity
+  # `eml(x, y) = e^x - ln y` is legible on the sticker, with `=` on
+  # its own line as a visual hinge between definiendum and definiens.
   with_outer_glow(
     geom_richtext(
-      aes(x = 0, y = 0.15),
-      label = "e<sup>x</sup> &minus; ln&thinsp;y",
+      aes(x = 0, y = 0.10),
+      label = paste0(
+        "eml(x,&thinsp;y)<br>",
+        "=<br>",
+        "e<sup>x</sup> &minus; ln&thinsp;y"
+      ),
       colour = "white",
       fill   = NA,
       label.colour = NA,
       family = "sans",
-      size   = 9,
-      fontface = "bold"
+      size   = 6.5,
+      fontface = "bold",
+      lineheight = 1.0
     ),
     colour = pal_high,
     sigma  = 8,
@@ -115,13 +122,13 @@ p <- ggplot() +
   # Wordmark
   with_outer_glow(
     geom_richtext(
-      aes(x = 0, y = -0.55),
+      aes(x = 0, y = -0.70),
       label = "**emlR**",
       colour = "white",
       fill   = NA,
       label.colour = NA,
       family = "sans",
-      size   = 7.5
+      size   = 7
     ),
     colour = pal_high,
     sigma  = 6,

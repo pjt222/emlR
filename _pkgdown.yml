@@ -14,12 +14,27 @@ template:
     code_font: {google: "JetBrains Mono"}
   includes:
     in_header: |
+      <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+      <script defer
+              src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      <script defer
+              src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+              onload="renderMathInElement(document.body, {
+                delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false
+              });"></script>
       <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
         // pandoc emits ```mermaid as <pre><code class="language-mermaid">…</code></pre>
         // or <pre class="mermaid"><code>…</code></pre>. Both forms — unwrap to
-        // <pre class="mermaid">raw text</pre> so mermaid v10 picks them up.
-        document.addEventListener('DOMContentLoaded', () => {
+        // <pre class="mermaid">raw text</pre>, then trigger an explicit run().
+        // (startOnLoad:true is racy: DOMContentLoaded has already fired by the
+        // time this module body executes, so its internal listener never runs.)
+        const renderMermaid = () => {
           document.querySelectorAll(
             'pre > code.language-mermaid, pre.mermaid > code'
           ).forEach(code => {
@@ -27,8 +42,14 @@ template:
             pre.classList.add('mermaid');
             pre.textContent = code.textContent;
           });
-          mermaid.initialize({ startOnLoad: true });
-        });
+          mermaid.initialize({ startOnLoad: false });
+          mermaid.run();
+        };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', renderMermaid);
+        } else {
+          renderMermaid();
+        }
       </script>
 
 home:

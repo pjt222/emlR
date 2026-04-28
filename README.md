@@ -1,4 +1,4 @@
-# emlR
+# emlR <img src="man/figures/logo.png" align="right" height="139" alt="emlR hex logo" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/pjt222/emlR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/pjt222/emlR/actions/workflows/R-CMD-check.yaml)
@@ -6,6 +6,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![arXiv](https://img.shields.io/badge/arXiv-2603.21852-b31b1b.svg)](https://arxiv.org/abs/2603.21852)
 <!-- badges: end -->
+
+> *Three for the constants under the unit sky,*
+> *Seven for the powers in their halls of base,*
+> *Nine for the trig that wax and wane and die,*
+> *One for the formula on its symbolic place,*
+> *One eml to rule them all, one eml to find them,*
+> *One eml to bring them all and in the AST bind them.*
 
 > R implementation of the EML (Exp-Minus-Log) Sheffer operator from
 > **Odrzywołek, A. (2026). All elementary functions from a single binary

@@ -18,6 +18,15 @@
 * 1 NOTE — "New submission". This is the package's first CRAN
   submission.
 
+Win-builder (R-devel, 2026-04-27) additionally reports a spell-check
+sub-NOTE on the DESCRIPTION. All flagged tokens are intentional:
+
+* "EML", "eml" — the operator name defined in the paper.
+* "Sheffer" — proper noun (after H. M. Sheffer, NAND operator).
+* "Odrzywolek" — author surname (ASCII transliteration of
+  "Odrzywołek"; kept ASCII in DESCRIPTION per CRAN policy).
+* "AST", "bytecode", "simplifier" — standard compiler terminology.
+
 The local check additionally reports an environment-only ERROR for
 PDF manual generation (`pdflatex is not available`) and an
 environment-only NOTE for HTML validation (`tidy not found`); both

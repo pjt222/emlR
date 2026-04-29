@@ -94,7 +94,6 @@ reference:
       - eml_const
       - eml_var
       - eml_node
-      - E
       - as_eml_expr
 
   - title: Predicates

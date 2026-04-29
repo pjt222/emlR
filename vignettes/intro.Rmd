@@ -87,7 +87,7 @@ You can also build expressions programmatically:
 
 ```{r constructors}
 eml_node(1, "x") # eml(1, x)
-Eml(1, Eml(Eml(1, "x"), 1)) # Eml() shorthand — paper Eq. 5
+eml_node(1, eml_node(eml_node(1, "x"), 1)) # paper Eq. 5
 ```
 
 ## Evaluating expressions

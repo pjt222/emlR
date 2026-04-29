@@ -82,13 +82,6 @@ as_eml_tree <- function(x) {
        " to eml_tree")
 }
 
-# Convenience: shorthand `Eml()` for building trees ---------------------------
-
-#' Shorthand: Eml(a, b) == eml_node(a, b). Numeric/character args auto-wrap.
-#' Named Eml rather than E to avoid masking igraph::E.
-#' @export
-Eml <- function(left, right) eml_node(left, right)
-
 #' The constant leaf 1 -- the only terminal in the variable-free grammar.
 #' @export
 ONE <- eml_const(1)

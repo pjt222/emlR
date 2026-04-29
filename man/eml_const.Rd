@@ -22,7 +22,6 @@ eml_const(0 + 1i)
 }
 \seealso{
 Other eml_constructors: 
-\code{\link{Eml}()},
 \code{\link{as_eml_expr}()},
 \code{\link{eml_node}()},
 \code{\link{eml_var}()}

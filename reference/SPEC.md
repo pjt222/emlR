@@ -46,7 +46,10 @@ eml_node(l, r)       # call("eml", l, r) after coercing children
                      # via as_eml_expr()
 as_eml_expr(x)       # accepts numeric -> stays; character -> as.name;
                      # call/name -> stays; otherwise stop()
-Eml(l, r)            # alias for eml_node (named Eml to avoid masking igraph::E)
+                     # No single-letter shorthand is exported (E was
+                     # dropped to avoid masking igraph::E and to avoid
+                     # case-collision between Eml.Rd and eml.Rd on
+                     # case-insensitive filesystems).
 ```
 
 ### Predicates
@@ -486,7 +489,7 @@ eml_real(x, y, tol)             # real-projection wrapper
 eml_const(v)
 eml_var(name)
 eml_node(l, r)
-Eml(l, r)                       # alias
+# (no single-letter shorthand — see §2.1)
 as_eml_expr(x)
 
 # Predicates

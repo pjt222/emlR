@@ -37,10 +37,9 @@ test_that("constructors: eml_const, eml_var, eml_node, E, as_eml_expr", {
   expect_error(eml_var(c("x", "y")))
 
   expect_identical(eml_node(1, "x"), quote(eml(1, x)))
-  expect_identical(Eml(1, "x"), quote(eml(1, x)))
 
-  # K=7 paper expression via Eml()
-  built <- Eml(1, Eml(Eml(1, "x"), 1))
+  # K=7 paper expression
+  built <- eml_node(1, eml_node(eml_node(1, "x"), 1))
   expected <- quote(eml(1, eml(eml(1, x), 1)))
   expect_identical(built, expected)
 

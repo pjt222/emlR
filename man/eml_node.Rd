@@ -23,7 +23,6 @@ eml_node(1, eml_node(eml_node(1, "x"), 1)) # paper Eq. 5
 }
 \seealso{
 Other eml_constructors: 
-\code{\link{Eml}()},
 \code{\link{as_eml_expr}()},
 \code{\link{eml_const}()},
 \code{\link{eml_var}()}

@@ -60,7 +60,7 @@ Tests (`test-core.R`):
 - `as_eml_expr(2)` returns `2` numerically (passes through)
 - `as_eml_expr("x")` returns `as.name("x")`
 - `as_eml_expr(quote(eml(1, x)))` returns the same call (passes through)
-- `Eml(1, "x")` returns `quote(eml(1, x))`
+- `eml_node(1, "x")` returns `quote(eml(1, x))`
 - `eml_K(quote(eml(1, eml(eml(1, x), 1))))` returns 7 (matches paper Eq. 5)
 - `eml_depth(quote(eml(1, eml(eml(1, x), 1))))` returns 3
 - `eml_rpn(quote(eml(1, eml(eml(1, x), 1))))` returns `"1 1 x E 1 E E"` (7 tokens, matches paper)

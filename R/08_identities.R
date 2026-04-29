@@ -11,7 +11,7 @@
 
 #' @rdname tree_identities
 #' @export
-tree_e <- function() Eml(1, 1)
+tree_e <- function() eml_node(1, 1)
 
 #' @rdname tree_identities
 #' @export
@@ -19,11 +19,11 @@ tree_one <- function() 1
 
 #' @rdname tree_identities
 #' @export
-tree_exp <- function(x = "x") Eml(x, 1)
+tree_exp <- function(x = "x") eml_node(x, 1)
 
 #' @rdname tree_identities
 #' @export
-tree_ln <- function(x = "x") Eml(1, Eml(Eml(1, x), 1))
+tree_ln <- function(x = "x") eml_node(1, eml_node(eml_node(1, x), 1))
 
 #' @rdname tree_identities
 #' @export
@@ -34,7 +34,7 @@ tree_log <- function(x = "x") tree_ln(x)
 #' @rdname tree_identities
 #' @export
 tree_sub <- function(x = "x", y = "y") {
-  Eml(tree_ln(x), tree_exp(y))
+  eml_node(tree_ln(x), tree_exp(y))
 }
 
 #' @rdname tree_identities
@@ -48,7 +48,7 @@ tree_zero <- function() tree_ln(1)
 #' @rdname tree_identities
 #' @export
 tree_neg_one <- function() {
-  Eml(tree_ln(tree_zero()), tree_exp(1))
+  eml_node(tree_ln(tree_zero()), tree_exp(1))
 }
 
 # --- Negation, addition, multiplication, division, power --------------------
@@ -56,13 +56,13 @@ tree_neg_one <- function() {
 #' @rdname tree_identities
 #' @export
 tree_minus <- function(x = "x") {
-  Eml(tree_ln(tree_zero()), tree_exp(x))
+  eml_node(tree_ln(tree_zero()), tree_exp(x))
 }
 
 #' @rdname tree_identities
 #' @export
 tree_add <- function(x = "x", y = "y") {
-  Eml(tree_ln(x), tree_exp(tree_minus(y)))
+  eml_node(tree_ln(x), tree_exp(tree_minus(y)))
 }
 
 #' @rdname tree_identities

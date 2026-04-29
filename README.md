@@ -36,8 +36,9 @@ and pedagogical exploration.
 ## Installation
 
 ```r
-# install.packages("Deriv")
-# install.packages("remotes"); remotes::install_github("pjt222/emlR")
+install.packages("Deriv")
+# install.packages("remotes")
+remotes::install_github("pjt222/emlR")
 ```
 
 The package depends only on base R and [`Deriv`](https://CRAN.R-project.org/package=Deriv).

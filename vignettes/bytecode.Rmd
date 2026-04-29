@@ -82,8 +82,8 @@ bc$max_stack # = depth + 1 for right-deep trees
 ```
 
 This is the exact RPN serialisation the paper writes as
-`1, 1, x, eml, 1, eml, eml` — emlR's `eml_rpn()` reproduces the
-human-readable form:
+`1 1 x E 1 E E` (with `E` denoting the `eml` operator after its
+operands) — emlR's `eml_rpn()` reproduces the human-readable form:
 
 ```{r rpn}
 eml_rpn(log_expr)

@@ -49,9 +49,11 @@ indicate exact symbolic recovery.
 \donttest{
 xs <- seq(0.5, 5, length.out = 30)
 ys <- log(xs)
-fit <- eml_fit(xs, ys, depth = 3, n_restarts = 2,
-               maxit = 200, seed = 1)
-fit$snap_mse  # ~ 0 indicates exact symbolic recovery of log(x)
+fit <- eml_fit(xs, ys,
+  depth = 3, n_restarts = 2,
+  maxit = 200, seed = 1
+)
+fit$snap_mse # ~ 0 indicates exact symbolic recovery of log(x)
 }
 }
 \seealso{

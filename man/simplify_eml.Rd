@@ -20,9 +20,9 @@ still drawn from the EML grammar (literals, names, and \code{eml} nodes
 only). Idempotent on every catalog entry.
 }
 \examples{
-simplify_eml(quote(eml(1, 1)))          # numeric e (folded)
-simplify_eml(quote(eml(x, 1)))          # unchanged
-simplify_eml(quote(eml(x, eml(1, 1))))  # eml(x, e)
+simplify_eml(quote(eml(1, 1))) # numeric e (folded)
+simplify_eml(quote(eml(x, 1))) # unchanged
+simplify_eml(quote(eml(x, eml(1, 1)))) # eml(x, e)
 }
 \seealso{
 \code{\link[=simplify_native]{simplify_native()}} for the mode that collapses to base-R

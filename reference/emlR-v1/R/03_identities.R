@@ -38,15 +38,15 @@
 
 #' Tree for the constant e.  e = eml(1, 1).
 #' @export
-tree_e <- function() E(1, 1)
+tree_e <- function() Eml(1, 1)
 
 #' Tree for exp(x).  exp(x) = eml(x, 1).
 #' @export
-tree_exp <- function(x = "x") E(x, 1)
+tree_exp <- function(x = "x") Eml(x, 1)
 
 #' Tree for ln(x).  ln(x) = eml(1, eml(eml(1, x), 1)).  Paper Eq. (5), K = 7.
 #' @export
-tree_ln <- function(x = "x") E(1, E(E(1, x), 1))
+tree_ln <- function(x = "x") Eml(1, Eml(Eml(1, x), 1))
 
 # ------------------------- Subtraction ---------------------------------------
 # x - y = eml(ln(x), exp(y))
@@ -56,7 +56,7 @@ tree_ln <- function(x = "x") E(1, E(E(1, x), 1))
 #' Tree for x - y.
 #' @export
 tree_sub <- function(x = "x", y = "y") {
-  E(tree_ln(x), tree_exp(y))
+  Eml(tree_ln(x), tree_exp(y))
 }
 
 # ------------------------- Zero, -1, integers -------------------------------
@@ -83,7 +83,7 @@ tree_zero <- function() tree_ln(1)
 #' Tree for -1.  Use -1 = 0 - 1 = sub(0, 1) at the leaf level.
 #' But sub takes trees; we feed it constants.
 #' @export
-tree_neg_one <- function() E(tree_ln(tree_zero()),  # ln(0) = -Inf in extended reals
+tree_neg_one <- function() Eml(tree_ln(tree_zero()),  # ln(0) = -Inf in extended reals
                               tree_exp(1))           # exp(1) = e
 # Actually that gives -Inf - e, not -1.  Let me redo.
 # We want -1.  -1 = sub(0, 1) literally: eml(ln(0), exp(1)).
@@ -99,7 +99,7 @@ tree_one <- function() eml_const(1)
 
 #' minus(x) = -x = 0 - x = sub(0, x).
 #' @export
-tree_minus <- function(x = "x") E(tree_ln(tree_zero()), tree_exp(x))
+tree_minus <- function(x = "x") Eml(tree_ln(tree_zero()), tree_exp(x))
 
 #' x + y = -((-x) - y) ... but easier: x + y = ln(exp(x) * exp(y))
 #' and multiplication itself unrolls. We use:
@@ -107,7 +107,7 @@ tree_minus <- function(x = "x") E(tree_ln(tree_zero()), tree_exp(x))
 #' Cleanest: x + y = sub(x, -y) = eml(ln(x), exp(-y)) where -y is a sub-tree.
 #' @export
 tree_add <- function(x = "x", y = "y") {
-  E(tree_ln(x), tree_exp(tree_minus(y)))
+  Eml(tree_ln(x), tree_exp(tree_minus(y)))
 }
 
 #' x * y = exp(ln(x) + ln(y)).  We assemble exp() of an addition tree.

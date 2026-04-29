@@ -16,8 +16,8 @@ Integer scalar.
 Leaves have depth 0; an \code{eml} node has depth \code{1 + max(depth(left), depth(right))}.
 }
 \examples{
-eml_depth(quote(eml(x, 1)))                          # 1
-eml_depth(quote(eml(1, eml(eml(1, x), 1))))          # 3
+eml_depth(quote(eml(x, 1))) # 1
+eml_depth(quote(eml(1, eml(eml(1, x), 1)))) # 3
 }
 \seealso{
 Other eml_inspectors: 

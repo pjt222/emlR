@@ -21,7 +21,7 @@ identical(eml_var("x"), eml_var(as.name("x")))
 }
 \seealso{
 Other eml_constructors: 
-\code{\link{E}()},
+\code{\link{Eml}()},
 \code{\link{as_eml_expr}()},
 \code{\link{eml_const}()},
 \code{\link{eml_node}()}

@@ -11,7 +11,8 @@ generates all elementary functions on the principal branch.
 * Native R AST representation. EML expressions are ordinary `call`
   objects — free interop with `deparse`, `bquote`, `all.vars`, `eval`,
   and `Deriv::Deriv`. There is no custom S3 class.
-* Constructors: `eml_const()`, `eml_var()`, `eml_node()`, `E()`,
+* Constructors: `eml_const()`, `eml_var()`, `eml_node()`, `Eml()`
+  (named `Eml` rather than `E` to avoid masking `igraph::E()`),
   `as_eml_expr()`.
 * Predicates: `is_eml_expr()`, `is_eml_call()`, `is_eml_const()`,
   `is_eml_var()`.

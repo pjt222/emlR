@@ -29,9 +29,9 @@ identical literals (\code{eml(1, eml(1, x))} has one shared entry for \code{1}).
 }
 \examples{
 bc <- compile_eml(quote(eml(1, eml(eml(1, x), 1))))
-bc$ops              # 0 0 1 2 0 2 2
-bc$consts           # 1+0i
-bc$vars             # "x"
+bc$ops # 0 0 1 2 0 2 2
+bc$consts # 1+0i
+bc$vars # "x"
 }
 \seealso{
 \code{\link[=run_bytecode]{run_bytecode()}} for executing the compiled output;

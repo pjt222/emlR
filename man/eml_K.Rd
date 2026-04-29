@@ -23,9 +23,9 @@ This is a behaviour change from v1, which returned the leaf count
 \code{\link[=eml_leafcount]{eml_leafcount()}}. See \code{ADR-001-K-counting.md} in the spec bundle.
 }
 \examples{
-eml_K(quote(eml(1, 1)))                              # 3 (e)
-eml_K(quote(eml(x, 1)))                              # 3 (exp)
-eml_K(quote(eml(1, eml(eml(1, x), 1))))              # 7 (log, paper Eq. 5)
+eml_K(quote(eml(1, 1))) # 3 (e)
+eml_K(quote(eml(x, 1))) # 3 (exp)
+eml_K(quote(eml(1, eml(eml(1, x), 1)))) # 7 (log, paper Eq. 5)
 }
 \seealso{
 \code{\link[=eml_leafcount]{eml_leafcount()}} for v1's leaf-only count.

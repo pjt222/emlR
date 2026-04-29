@@ -21,7 +21,7 @@ not an EML expression.
 is_eml_expr(1)
 is_eml_expr(quote(x))
 is_eml_expr(quote(eml(1, x)))
-is_eml_expr(quote(x + y))     # FALSE
+is_eml_expr(quote(x + y)) # FALSE
 }
 \seealso{
 Other eml_predicates: 

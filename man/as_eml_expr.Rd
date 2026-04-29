@@ -32,7 +32,7 @@ as_eml_expr(quote(eml(1, x)))
 }
 \seealso{
 Other eml_constructors: 
-\code{\link{E}()},
+\code{\link{Eml}()},
 \code{\link{eml_const}()},
 \code{\link{eml_node}()},
 \code{\link{eml_var}()}

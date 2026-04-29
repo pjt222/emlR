@@ -16,9 +16,9 @@ Integer.
 Equals \code{5 * 2^depth - 6} (paper, SI III).
 }
 \examples{
-master_n_params(1)   # 4
-master_n_params(2)   # 14
-master_n_params(3)   # 34
+master_n_params(1) # 4
+master_n_params(2) # 14
+master_n_params(3) # 34
 }
 \seealso{
 Other eml_master: 

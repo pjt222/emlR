@@ -110,15 +110,18 @@ as_eml_expr <- function(x) {
 
 #' Shorthand for [eml_node()]
 #'
-#' `E(l, r)` is equivalent to `eml_node(l, r)`. Provided so that the
-#' v1-style constructions read identically:
-#' `E(1, E(E(1, "x"), 1))` builds the same `call` as
+#' `Eml(l, r)` is equivalent to `eml_node(l, r)`. The compact form lets
+#' paper-style constructions read identically:
+#' `Eml(1, Eml(Eml(1, "x"), 1))` builds the same `call` as
 #' `quote(eml(1, eml(eml(1, x), 1)))`.
+#'
+#' Named `Eml` rather than `E` to avoid masking [igraph::E()] (the
+#' edge accessor), which is one of the most-used igraph idioms.
 #'
 #' @param left,right child expressions.
 #' @return A `call`.
 #' @examples
-#' E(1, E(E(1, "x"), 1))
+#' Eml(1, Eml(Eml(1, "x"), 1))
 #' @family eml_constructors
 #' @export
-E <- function(left, right) eml_node(left, right)
+Eml <- function(left, right) eml_node(left, right)

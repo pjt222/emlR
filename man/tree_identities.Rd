@@ -85,10 +85,10 @@ K-optimal — see the paper's Table 4 for the smaller forms found
 by exhaustive search.
 }
 \examples{
-tree_log("x")    # eml(1, eml(eml(1, x), 1))  — paper Eq. 5
-tree_exp("x")    # eml(x, 1)
+tree_log("x") # eml(1, eml(eml(1, x), 1))  — paper Eq. 5
+tree_exp("x") # eml(x, 1)
 tree_add("x", "y")
-simplify_native(tree_log("x"))   # log(x)
+simplify_native(tree_log("x")) # log(x)
 }
 \seealso{
 \code{\link[=eml_catalog]{eml_catalog()}} for the catalog as a named list,

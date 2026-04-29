@@ -19,8 +19,8 @@ children.
 }
 \examples{
 is_eml_call(quote(eml(1, x)))
-is_eml_call(quote(eml(1, x + y)))   # TRUE structurally; children not checked
-is_eml_call(quote(x + y))            # FALSE
+is_eml_call(quote(eml(1, x + y))) # TRUE structurally; children not checked
+is_eml_call(quote(x + y)) # FALSE
 }
 \seealso{
 Other eml_predicates: 

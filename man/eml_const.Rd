@@ -18,11 +18,11 @@ expression. Provided for symmetry with \code{\link[=eml_var]{eml_var()}} and \co
 }
 \examples{
 eml_const(1)
-eml_const(0+1i)
+eml_const(0 + 1i)
 }
 \seealso{
 Other eml_constructors: 
-\code{\link{E}()},
+\code{\link{Eml}()},
 \code{\link{as_eml_expr}()},
 \code{\link{eml_node}()},
 \code{\link{eml_var}()}

@@ -41,9 +41,9 @@ on the structured \code{log} pattern):
 Constant subtrees are folded as a final step.
 }
 \examples{
-simplify_native(quote(eml(x, 1)))                            # exp(x)
-simplify_native(quote(eml(1, eml(eml(1, x), 1))))             # log(x)
-simplify_native(quote(eml(log(a), exp(b))))                   # a - b
+simplify_native(quote(eml(x, 1))) # exp(x)
+simplify_native(quote(eml(1, eml(eml(1, x), 1)))) # log(x)
+simplify_native(quote(eml(log(a), exp(b)))) # a - b
 }
 \seealso{
 \code{\link[=simplify_eml]{simplify_eml()}} for the mode that stays inside the EML

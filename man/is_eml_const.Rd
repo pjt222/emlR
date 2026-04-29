@@ -16,10 +16,10 @@ Logical scalar.
 Is the object an EML constant literal?
 }
 \examples{
-is_eml_const(1)               # TRUE
-is_eml_const(0+1i)             # TRUE
-is_eml_const(c(1, 2))          # FALSE — length-2 vector
-is_eml_const(quote(x))         # FALSE — name
+is_eml_const(1) # TRUE
+is_eml_const(0 + 1i) # TRUE
+is_eml_const(c(1, 2)) # FALSE — length-2 vector
+is_eml_const(quote(x)) # FALSE — name
 }
 \seealso{
 Other eml_predicates: 

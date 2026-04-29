@@ -23,7 +23,7 @@ the corresponding closed-form symbolic expression.
 \examples{
 theta <- theta_for_exp()
 snapped <- snap_master_params(theta, depth = 1)
-identical(snapped, theta)        # already one-hot
+identical(snapped, theta) # already one-hot
 }
 \seealso{
 Other eml_master: 

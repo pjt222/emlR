@@ -37,7 +37,9 @@ eml_eval(quote(eml(x, 1)), list(x = 2), real = TRUE)
 # Vectorised: log evaluated at 30 points
 xs <- seq(0.5, 5, length.out = 30)
 lx <- eml_eval(quote(eml(1, eml(eml(1, x), 1))),
-               list(x = xs), real = TRUE)
+  list(x = xs),
+  real = TRUE
+)
 max(abs(lx - log(xs)))
 }
 \seealso{

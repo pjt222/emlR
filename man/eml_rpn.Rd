@@ -19,8 +19,8 @@ Returns a single space-separated string. Constants are formatted via
 \code{log(x)}, returns \code{"1 1 x E 1 E E"} (7 tokens, K=7).
 }
 \examples{
-eml_rpn(quote(eml(x, 1)))                            # "x 1 E"
-eml_rpn(quote(eml(1, eml(eml(1, x), 1))))            # "1 1 x E 1 E E"
+eml_rpn(quote(eml(x, 1))) # "x 1 E"
+eml_rpn(quote(eml(1, eml(eml(1, x), 1)))) # "1 1 x E 1 E E"
 }
 \seealso{
 Other eml_inspectors: 

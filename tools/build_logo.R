@@ -4,60 +4,41 @@
 # `man/figures/logo.png`. Not invoked at install or check time.
 #
 # Required packages (build-only, intentionally NOT in DESCRIPTION):
-#   ggplot2, ggforce, ambient, ggtext, ggfx, grid, ragg
+#   ggplot2, ggforce, ggtext, ggfx, grid, ragg
 #
 # Run:
 #   Rscript tools/build_logo.R
 #
 # Output:
-#   man/figures/logo.png   — 600 x 696 px, hex point-up, indigo→cyan
+#   man/figures/logo.png   — 600 x 696 px, transparent hex (point-up),
+#                            black stroke, white exp/log curves,
+#                            cyan-glow `e^x − ln y` formula and **emlR**
+#                            wordmark (both tilted 30°).
 
 suppressPackageStartupMessages({
   library(ggplot2)
   library(ggforce)
-  library(ambient)
   library(ggtext)
   library(ggfx)
   library(grid)
 })
 
-set.seed(2603)  # arXiv prefix of Odrzywolek (2026)
-
-# ---- hex geometry ---------------------------------------------------------
+# ---- hex predicate (curve clipping) --------------------------------------
 # The hex stroke itself is drawn by ggforce::geom_regon() further below.
-# `inside_hex()` (defined after the noise grid) is the data-side predicate
-# used to clip the perlin raster — that is filtering, not graphics, and is
-# kept hand-written for transparency.
-
-# ---- background: ambient perlin noise raster, hex-clipped ----------------
-grid_n <- 2222
-noise_grid <- long_grid(
-  x = seq(-sqrt(3)/2, sqrt(3)/2, length.out = grid_n),
-  y = seq(-1,         1,         length.out = grid_n)
-)
-noise_grid$value <- gen_perlin(
-  noise_grid$x, noise_grid$y,
-  frequency = 1.4, seed = 2603
-) +
-  0.6 * gen_perlin(
-    noise_grid$x, noise_grid$y,
-    frequency = 8.0, seed = 2026
-  )
-
-# Drop pixels outside the hex (point-in-polygon via simple bound test on
-# the six hex edges — equivalent to abs(x) <= sqrt(3)/2 AND
-# abs(y) + abs(x)/sqrt(3) <= 1 for a point-up regular hex).
+# `inside_hex()` is a point-in-polygon test (simple bound test on the six
+# edges — equivalent to abs(x) <= sqrt(3)/2 AND
+# abs(y) + abs(x)/sqrt(3) <= 1 for a point-up regular hex). It is used to
+# trim the exp/log overlay curves so they do not poke past the hex edge.
 inside_hex <- function(x, y) {
   abs(x) <= sqrt(3) / 2 + 1e-9 &
     abs(y) + abs(x) / sqrt(3) <= 1 + 1e-9
 }
-noise_grid <- noise_grid[inside_hex(noise_grid$x, noise_grid$y), ]
 
 # ---- exp / log overlay curves --------------------------------------------
 curve_x <- seq(-1.2, 1.2, length.out = 400)
 exp_curve <- data.frame(
   x = curve_x,
-  y = (exp(curve_x) - 2) / 3   # rescaled so it fits the hex
+  y = (exp(curve_x) - 2) / 3 # rescaled so it fits the hex
 )
 log_curve <- data.frame(
   x = curve_x[curve_x > 0.05],
@@ -66,64 +47,53 @@ log_curve <- data.frame(
 exp_curve <- exp_curve[inside_hex(exp_curve$x, exp_curve$y), ]
 log_curve <- log_curve[inside_hex(log_curve$x, log_curve$y), ]
 
-# ---- palette --------------------------------------------------------------
-pal_low  <- "#0b1e3f"  # deep indigo
-pal_mid  <- "#1e4a8a"  # mid blue
-pal_high <- "#7ad8ff"  # cyan
+# ---- glow colour ---------------------------------------------------------
+pal_high <- "#7ad8ff" # cyan, used by with_outer_glow() on the text layers
 
 # ---- plot ----------------------------------------------------------------
 p <- ggplot() +
-  # Hex-clipped noise background. ggfx::with_mask would also work; using
-  # geom_raster on already-clipped data keeps the dependency surface small.
-  geom_raster(
-    data = noise_grid,
-    aes(x, y, fill = value),
-    interpolate = TRUE,
-    show.legend = FALSE
+  # Hex frame fill — native ggforce regular-polygon primitive. ggforce
+  # places a vertex at angle `angle` (default = 0 ⇒ vertex at 3 o'clock,
+  # i.e. flat-top with vertices left/right). Adding pi/2 rotates by 90°
+  # to put the vertex at 12 o'clock (point-up) so the stroke aligns with
+  # the `inside_hex()` predicate that trims the overlay curves.
+  geom_regon(
+    aes(x0 = 0, y0 = 0, r = 1, sides = 6, angle = pi / 2),
+    fill = "grey50",
+    colour = "black",
+    linewidth = 1.6
   ) +
-  scale_fill_gradientn(colours = c(pal_low, pal_mid, pal_high)) +
   # Subtle exp / log curves (low alpha provides the soft look without blur)
   geom_path(
     data = exp_curve,
     aes(x, y),
     colour = "white",
-    alpha  = 0.30,
+    alpha = 0.50,
     linewidth = 0.7
   ) +
   geom_path(
     data = log_curve,
     aes(x, y),
     colour = "white",
-    alpha  = 0.30,
+    alpha = 0.50,
     linewidth = 0.7
   ) +
-  # Glowing formula at the centre — three lines so the full identity
-  # `eml(x, y) = e^x - ln y` is legible on the sticker, with `=` on
-  # its own line as a visual hinge between definiendum and definiens.
+  # Glowing single-line formula `e^x − ln y` near the centre, tilted 30°.
   with_outer_glow(
     geom_richtext(
-      aes(x = -0.15, y = 0.15),
-      label = paste0(
-        "eml(x,&thinsp;y)",
-        "<br>",
-        # "<br>",
-        " = ",
-        # "<br>",
-        "<br>",
-        "e<sup>x</sup> &minus; ln&thinsp;y"
-      ),
+      aes(x = -0.1, y = 0.15),
+      label = "e<sup>x</sup> &minus; ln&thinsp;y",
       colour = "white",
-      fill   = NA,
+      fill = NA,
       label.colour = NA,
       family = "mono",
-      size   = 5,
+      size = 7,
       fontface = "bold",
-      lineheight = 1.0,
       angle = 30
     ),
     colour = pal_high,
-    sigma  = 8,
-    expand = 6
+    sigma = 6,
+    expand = 2
   ) +
   # Wordmark
   with_outer_glow(
@@ -131,25 +101,23 @@ p <- ggplot() +
       aes(x = 0.50, y = -0.50),
       label = "**emlR**",
       colour = "white",
-      fill   = NA,
+      fill = NA,
       label.colour = NA,
       family = "sans",
-      size   = 5,
+      fontface = "bold",
+      size = 5,
       angle = 30
     ),
     colour = pal_high,
-    sigma  = 6,
-    expand = 4
+    sigma = 6,
+    expand = 2
   ) +
-  # Hex frame stroke — native ggforce regular-polygon primitive. ggforce
-  # places a vertex at angle `angle` (default = 0 ⇒ vertex at 3 o'clock,
-  # i.e. flat-top with vertices left/right). Adding pi/2 rotates by 90°
-  # to put the vertex at 12 o'clock (point-up) so the stroke aligns with
-  # the `inside_hex()` predicate that clips the perlin raster.
+  # Re-stroke the hex on top of the curves and text so the black border is
+  # not partially overdrawn.
   geom_regon(
     aes(x0 = 0, y0 = 0, r = 1, sides = 6, angle = pi / 2),
-    fill   = NA,
-    colour = "white",
+    fill = NA,
+    colour = "black",
     linewidth = 1.6
   ) +
   # xlim/ylim are padded beyond the hex bounding box (half-width sqrt(3)/2,
@@ -177,5 +145,7 @@ ggsave(
   device   = ragg::agg_png
 )
 
-message("wrote ", out_path, " (",
-        format(file.size(out_path), big.mark = ","), " bytes)")
+message(
+  "wrote ", out_path, " (",
+  format(file.size(out_path), big.mark = ","), " bytes)"
+)

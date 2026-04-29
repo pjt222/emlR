@@ -20,7 +20,7 @@
 #' @return The same value (no wrapping).
 #' @examples
 #' eml_const(1)
-#' eml_const(0+1i)
+#' eml_const(0 + 1i)
 #' @family eml_constructors
 #' @export
 eml_const <- function(value = 1) {
@@ -42,7 +42,9 @@ eml_const <- function(value = 1) {
 #' @family eml_constructors
 #' @export
 eml_var <- function(name = "x") {
-  if (is.name(name)) return(name)
+  if (is.name(name)) {
+    return(name)
+  }
   if (is.character(name) && length(name) == 1L && nzchar(name)) {
     return(as.name(name))
   }
@@ -58,8 +60,8 @@ eml_var <- function(name = "x") {
 #' @param left,right child expressions.
 #' @return A `call`.
 #' @examples
-#' eml_node(1, "x")                                    # eml(1, x)
-#' eml_node(1, eml_node(eml_node(1, "x"), 1))          # paper Eq. 5
+#' eml_node(1, "x") # eml(1, x)
+#' eml_node(1, eml_node(eml_node(1, "x"), 1)) # paper Eq. 5
 #' @family eml_constructors
 #' @export
 eml_node <- function(left, right) {
@@ -88,12 +90,22 @@ eml_node <- function(left, right) {
 #' @family eml_constructors
 #' @export
 as_eml_expr <- function(x) {
-  if (is.call(x)) return(x)
-  if (is.name(x)) return(x)
-  if ((is.numeric(x) || is.complex(x)) && length(x) == 1L) return(x)
-  if (is.character(x) && length(x) == 1L && nzchar(x)) return(as.name(x))
-  stop("as_eml_expr: cannot coerce object of class ",
-       paste(class(x), collapse = "/"), " (length ", length(x), ").")
+  if (is.call(x)) {
+    return(x)
+  }
+  if (is.name(x)) {
+    return(x)
+  }
+  if ((is.numeric(x) || is.complex(x)) && length(x) == 1L) {
+    return(x)
+  }
+  if (is.character(x) && length(x) == 1L && nzchar(x)) {
+    return(as.name(x))
+  }
+  stop(
+    "as_eml_expr: cannot coerce object of class ",
+    paste(class(x), collapse = "/"), " (length ", length(x), ")."
+  )
 }
 
 #' Shorthand for [eml_node()]

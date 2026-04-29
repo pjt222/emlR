@@ -10,8 +10,8 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment  = "#>",
-  fig.width  = 7,
+  comment = "#>",
+  fig.width = 7,
   fig.height = 4
 )
 ```
@@ -41,7 +41,7 @@ the optimiser *find* the right discrete structure.
 ```{r master}
 m1 <- build_master(1)
 m1
-master_n_params(1)        # 4 = 5 * 2^1 - 6
+master_n_params(1) # 4 = 5 * 2^1 - 6
 ```
 
 For depth 1 there are 4 parameters: `(alpha_1, beta_1)` for the left
@@ -62,13 +62,14 @@ The paper's three sacred identities give us closed-form selectors. For
 
 ```{r exp-selector}
 par_exp <- theta_for_exp()
-par_exp                             # length 4: 0 1 1 0
+par_exp # length 4: 0 1 1 0
 
 xs <- seq(-1, 1, length.out = 5)
 bindings <- unpack_master_params(par_exp, depth = 1)
 env <- list2env(c(list(eml = eml), bindings, list(x = xs)),
-                parent = baseenv())
-Re(eval(m1, env))                   # exp(xs)
+  parent = baseenv()
+)
+Re(eval(m1, env)) # exp(xs)
 ```
 
 For `log(x)` the paper's Eq. 5 expands as
@@ -78,13 +79,14 @@ recovers it:
 
 ```{r log-selector}
 m3 <- build_master(3)
-master_n_params(3)                  # 34
+master_n_params(3) # 34
 
 par_log <- theta_for_log()
 xs <- c(0.5, 1, 2, 5, 10)
 bindings <- unpack_master_params(par_log, depth = 3)
 env <- list2env(c(list(eml = eml), bindings, list(x = xs)),
-                parent = baseenv())
+  parent = baseenv()
+)
 suppressWarnings(Re(eval(m3, env)))
 log(xs)
 ```
@@ -112,12 +114,13 @@ xs <- seq(0.5, 5, length.out = 30)
 ys <- log(xs)
 
 fit <- eml_fit(xs, ys,
-               depth            = 3,
-               parameterization = "simplex",
-               method           = "L-BFGS-B",
-               maxit            = 200,
-               n_restarts       = 2,
-               seed             = 1)
+  depth            = 3,
+  parameterization = "simplex",
+  method           = "L-BFGS-B",
+  maxit            = 200,
+  n_restarts       = 2,
+  seed             = 1
+)
 ```
 
 `fit$snap_mse` is the MSE *after* snapping each slot to its argmax
@@ -127,21 +130,24 @@ right discrete grammar.
 
 ```{r snap-mse}
 fit$snap_mse
-fit$best_seed                       # which restart won
+fit$best_seed # which restart won
 ```
 
 Compare predicted vs. true:
 
 ```{r plot}
-plot(xs, ys, pch = 19, ylab = "y", xlab = "x",
-     main = "Recovering log(x) from data alone")
-lines(xs, fit$pred,      col = "tomato",  lwd = 2)
+plot(xs, ys,
+  pch = 19, ylab = "y", xlab = "x",
+  main = "Recovering log(x) from data alone"
+)
+lines(xs, fit$pred, col = "tomato", lwd = 2)
 lines(xs, fit$pred_snap, col = "darkgreen", lwd = 2, lty = 2)
 legend("bottomright",
-       c("data (= log(x))", "continuous fit", "snapped (one-hot)"),
-       col = c("black", "tomato", "darkgreen"),
-       lwd = c(NA, 2, 2), lty = c(NA, 1, 2),
-       pch = c(19, NA, NA))
+  c("data (= log(x))", "continuous fit", "snapped (one-hot)"),
+  col = c("black", "tomato", "darkgreen"),
+  lwd = c(NA, 2, 2), lty = c(NA, 1, 2),
+  pch = c(19, NA, NA)
+)
 ```
 
 ## Why it works

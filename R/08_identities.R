@@ -119,10 +119,10 @@ tree_sqrt <- function(x = "x") {
 #' @rdname tree_identities
 #' @export
 tree_sin <- function(x = "x") {
-  ix      <- tree_mul(tree_i(), x)
-  neg_ix  <- tree_minus(ix)
-  numer   <- tree_sub(tree_exp(ix), tree_exp(neg_ix))
-  denom   <- tree_mul(tree_two(), tree_i())
+  ix <- tree_mul(tree_i(), x)
+  neg_ix <- tree_minus(ix)
+  numer <- tree_sub(tree_exp(ix), tree_exp(neg_ix))
+  denom <- tree_mul(tree_two(), tree_i())
   tree_div(numer, denom)
 }
 
@@ -130,9 +130,9 @@ tree_sin <- function(x = "x") {
 #' @rdname tree_identities
 #' @export
 tree_cos <- function(x = "x") {
-  ix     <- tree_mul(tree_i(), x)
+  ix <- tree_mul(tree_i(), x)
   neg_ix <- tree_minus(ix)
-  numer  <- tree_add(tree_exp(ix), tree_exp(neg_ix))
+  numer <- tree_add(tree_exp(ix), tree_exp(neg_ix))
   tree_div(numer, tree_two())
 }
 
@@ -158,10 +158,10 @@ tree_cos <- function(x = "x") {
 #' @name tree_identities
 #' @return An EML expression.
 #' @examples
-#' tree_log("x")    # eml(1, eml(eml(1, x), 1))  — paper Eq. 5
-#' tree_exp("x")    # eml(x, 1)
+#' tree_log("x") # eml(1, eml(eml(1, x), 1))  — paper Eq. 5
+#' tree_exp("x") # eml(x, 1)
 #' tree_add("x", "y")
-#' simplify_native(tree_log("x"))   # log(x)
+#' simplify_native(tree_log("x")) # log(x)
 #' @seealso [eml_catalog()] for the catalog as a named list,
 #'   [verify_catalog()] for end-to-end numerical verification, and
 #'   [simplify_native()] for collapsing these expressions to base-R
@@ -211,24 +211,24 @@ eml_catalog <- function() {
 # verification.
 .catalog_test_vars <- function() {
   list(
-    one     = list(vars = list(),                expected = 1),
-    e       = list(vars = list(),                expected = exp(1)),
-    zero    = list(vars = list(),                expected = 0),
-    neg_one = list(vars = list(),                expected = -1),
-    two     = list(vars = list(),                expected = 2),
-    i       = list(vars = list(),                expected = 1i),
-    pi      = list(vars = list(),                expected = pi),
-    exp     = list(vars = list(x = 0.5),         expected = exp(0.5)),
-    log     = list(vars = list(x = 2),           expected = log(2)),
-    minus   = list(vars = list(x = 3),           expected = -3),
-    add     = list(vars = list(x = 2, y = 3),    expected = 5),
-    sub     = list(vars = list(x = 5, y = 2),    expected = 3),
-    mul     = list(vars = list(x = 2, y = 3),    expected = 6),
-    div     = list(vars = list(x = 6, y = 2),    expected = 3),
-    pow     = list(vars = list(x = 2, y = 3),    expected = 8),
-    sqrt    = list(vars = list(x = 16),          expected = 4),
-    sin     = list(vars = list(x = pi / 6),      expected = 0.5),
-    cos     = list(vars = list(x = pi / 3),      expected = 0.5)
+    one     = list(vars = list(), expected = 1),
+    e       = list(vars = list(), expected = exp(1)),
+    zero    = list(vars = list(), expected = 0),
+    neg_one = list(vars = list(), expected = -1),
+    two     = list(vars = list(), expected = 2),
+    i       = list(vars = list(), expected = 1i),
+    pi      = list(vars = list(), expected = pi),
+    exp     = list(vars = list(x = 0.5), expected = exp(0.5)),
+    log     = list(vars = list(x = 2), expected = log(2)),
+    minus   = list(vars = list(x = 3), expected = -3),
+    add     = list(vars = list(x = 2, y = 3), expected = 5),
+    sub     = list(vars = list(x = 5, y = 2), expected = 3),
+    mul     = list(vars = list(x = 2, y = 3), expected = 6),
+    div     = list(vars = list(x = 6, y = 2), expected = 3),
+    pow     = list(vars = list(x = 2, y = 3), expected = 8),
+    sqrt    = list(vars = list(x = 16), expected = 4),
+    sin     = list(vars = list(x = pi / 6), expected = 0.5),
+    cos     = list(vars = list(x = pi / 3), expected = 0.5)
   )
 }
 
@@ -256,15 +256,17 @@ verify_catalog <- function(tol = 1e-8, verbose = TRUE) {
   ok_all <- TRUE
   for (nm in names(catalog)) {
     expr <- catalog[[nm]]
-    s    <- spec[[nm]]
-    val  <- eml_eval(expr, s$vars)
+    s <- spec[[nm]]
+    val <- eml_eval(expr, s$vars)
     diff <- max(abs(as.complex(val) - as.complex(s$expected)), na.rm = TRUE)
     pass <- isTRUE(diff < tol)
     ok_all <- ok_all && pass
     if (verbose) {
-      cat(sprintf("  [%s] %-8s  K=%-3d  |err| = %.3g\n",
-                  if (pass) "OK " else "FAIL",
-                  nm, eml_K(expr), diff))
+      cat(sprintf(
+        "  [%s] %-8s  K=%-3d  |err| = %.3g\n",
+        if (pass) "OK " else "FAIL",
+        nm, eml_K(expr), diff
+      ))
     }
   }
   invisible(ok_all)

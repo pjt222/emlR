@@ -78,7 +78,7 @@ single `1+0i` and points every `LIT` to index 1.
 ```{r consts}
 bc$consts
 bc$vars
-bc$max_stack          # = depth + 1 for right-deep trees
+bc$max_stack # = depth + 1 for right-deep trees
 ```
 
 This is the exact RPN serialisation the paper writes as
@@ -115,12 +115,17 @@ random EML trees of depths 1–5 over random complex input vectors:
 ```{r equiv}
 random_eml_tree <- function(max_depth, var_names = c("x", "y")) {
   if (max_depth == 0 || runif(1) < 0.4) {
-    if (runif(1) < 0.5) sample(c(1, 1, 1, 0.5, 2), 1)
-    else as.name(sample(var_names, 1))
+    if (runif(1) < 0.5) {
+      sample(c(1, 1, 1, 0.5, 2), 1)
+    } else {
+      as.name(sample(var_names, 1))
+    }
   } else {
-    call("eml",
-         random_eml_tree(max_depth - 1, var_names),
-         random_eml_tree(max_depth - 1, var_names))
+    call(
+      "eml",
+      random_eml_tree(max_depth - 1, var_names),
+      random_eml_tree(max_depth - 1, var_names)
+    )
   }
 }
 
@@ -132,7 +137,8 @@ for (i in seq_len(20)) {
   v1 <- eml_eval(expr, vars)
   v2 <- run_bytecode(compile_eml(expr), vars)
   if (!isTRUE(all.equal(v1, v2, tolerance = 1e-10))) {
-    agree <- FALSE; break
+    agree <- FALSE
+    break
   }
 }
 agree

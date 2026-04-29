@@ -32,9 +32,9 @@
 #' }
 #' @examples
 #' bc <- compile_eml(quote(eml(1, eml(eml(1, x), 1))))
-#' bc$ops              # 0 0 1 2 0 2 2
-#' bc$consts           # 1+0i
-#' bc$vars             # "x"
+#' bc$ops # 0 0 1 2 0 2 2
+#' bc$consts # 1+0i
+#' bc$vars # "x"
 #' @seealso [run_bytecode()] for executing the compiled output;
 #'   [eml_eval()] for the slower tree-walking evaluator.
 #' @export
@@ -42,16 +42,18 @@
 #   input:"ast.internal", output:"bytecode.internal"
 compile_eml <- function(expr) {
   if (!is_eml_expr(expr)) {
-    stop("compile_eml: not an EML expression (",
-         paste(class(expr), collapse = "/"), ").")
+    stop(
+      "compile_eml: not an EML expression (",
+      paste(class(expr), collapse = "/"), ")."
+    )
   }
 
   # Pre-size the buffers using the K (total node count); each node emits
   # exactly one opcode.
   K <- eml_K(expr)
-  ops  <- integer(K)
+  ops <- integer(K)
   args <- integer(K)
-  pos  <- 0L
+  pos <- 0L
 
   consts <- complex(0)
   vars_n <- character(0)
@@ -60,9 +62,11 @@ compile_eml <- function(expr) {
     v <- as.complex(v)
     if (length(consts) > 0L) {
       hit <- which(consts == v &
-                   abs(Re(consts) - Re(v)) == 0 &
-                   abs(Im(consts) - Im(v)) == 0)
-      if (length(hit) > 0L) return(hit[1L])
+        abs(Re(consts) - Re(v)) == 0 &
+        abs(Im(consts) - Im(v)) == 0)
+      if (length(hit) > 0L) {
+        return(hit[1L])
+      }
     }
     consts[[length(consts) + 1L]] <<- v
     length(consts)
@@ -71,7 +75,9 @@ compile_eml <- function(expr) {
   add_var <- function(nm) {
     if (length(vars_n) > 0L) {
       hit <- which(vars_n == nm)
-      if (length(hit) > 0L) return(hit[1L])
+      if (length(hit) > 0L) {
+        return(hit[1L])
+      }
     }
     vars_n[[length(vars_n) + 1L]] <<- nm
     length(vars_n)
@@ -79,7 +85,7 @@ compile_eml <- function(expr) {
 
   emit <- function(op, a) {
     pos <<- pos + 1L
-    ops[pos]  <<- op
+    ops[pos] <<- op
     args[pos] <<- a
   }
 
@@ -146,7 +152,7 @@ compile_eml <- function(expr) {
 #' @examples
 #' bc <- compile_eml(quote(eml(1, eml(eml(1, x), 1))))
 #' xs <- seq(0.5, 5, length.out = 30)
-#' Re(run_bytecode(bc, list(x = xs)))     # log(xs)
+#' Re(run_bytecode(bc, list(x = xs))) # log(xs)
 #' @seealso [compile_eml()] for producing the bytecode object;
 #'   [eml_eval()] for the slower tree-walking evaluator.
 #' @export
@@ -160,8 +166,10 @@ run_bytecode <- function(bc, vars = list()) {
   if (length(bc$vars) > 0L) {
     missing <- setdiff(bc$vars, names(vars))
     if (length(missing) > 0L) {
-      stop("run_bytecode: missing variable bindings: ",
-           paste(missing, collapse = ", "))
+      stop(
+        "run_bytecode: missing variable bindings: ",
+        paste(missing, collapse = ", ")
+      )
     }
     var_vals <- lapply(bc$vars, function(nm) as.complex(vars[[nm]]))
   } else {
@@ -170,20 +178,20 @@ run_bytecode <- function(bc, vars = list()) {
 
   stack <- vector("list", bc$max_stack)
   sp <- 0L
-  ops  <- bc$ops
+  ops <- bc$ops
   args <- bc$args
   consts <- bc$consts
 
   for (k in seq_along(ops)) {
     op <- ops[k]
-    a  <- args[k]
+    a <- args[k]
     if (op == .OP_LIT) {
       sp <- sp + 1L
       stack[[sp]] <- consts[a]
     } else if (op == .OP_VAR) {
       sp <- sp + 1L
       stack[[sp]] <- var_vals[[a]]
-    } else {  # EML
+    } else { # EML
       sp <- sp - 1L
       stack[[sp]] <- exp(stack[[sp]]) - log(stack[[sp + 1L]])
     }

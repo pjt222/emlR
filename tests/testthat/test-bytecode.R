@@ -1,10 +1,10 @@
 test_that("compile_eml produces the expected ops/args for the K=7 log expr", {
   bc <- compile_eml(quote(eml(1, eml(eml(1, x), 1))))
   # Post-order: LIT, LIT, VAR, EML, LIT, EML, EML
-  expect_equal(bc$ops,  c(0L, 0L, 1L, 2L, 0L, 2L, 2L))
+  expect_equal(bc$ops, c(0L, 0L, 1L, 2L, 0L, 2L, 2L))
   expect_equal(bc$args, c(1L, 1L, 1L, 0L, 1L, 0L, 0L))
   expect_equal(bc$consts, 1 + 0i)
-  expect_equal(bc$vars,   "x")
+  expect_equal(bc$vars, "x")
   expect_equal(length(bc$ops), eml_K(bc$source))
 })
 
@@ -31,16 +31,18 @@ test_that("compile_eml records max_stack equal to right-deep tree depth", {
 
 test_that("run_bytecode equals eml_eval on representative cases", {
   cases <- list(
-    list(expr = quote(eml(1, 1)),                       vars = list()),
-    list(expr = quote(eml(x, 1)),                       vars = list(x = 0.5)),
-    list(expr = quote(eml(1, eml(eml(1, x), 1))),       vars = list(x = 2)),
-    list(expr = quote(eml(1, eml(eml(1, x), 1))),
-         vars = list(x = c(0.5, 1, 2, 3, 5)))
+    list(expr = quote(eml(1, 1)), vars = list()),
+    list(expr = quote(eml(x, 1)), vars = list(x = 0.5)),
+    list(expr = quote(eml(1, eml(eml(1, x), 1))), vars = list(x = 2)),
+    list(
+      expr = quote(eml(1, eml(eml(1, x), 1))),
+      vars = list(x = c(0.5, 1, 2, 3, 5))
+    )
   )
   for (cs in cases) {
     bc <- compile_eml(cs$expr)
     v_eval <- eml_eval(cs$expr, cs$vars)
-    v_bc   <- run_bytecode(bc, cs$vars)
+    v_bc <- run_bytecode(bc, cs$vars)
     expect_equal(v_bc, v_eval, tolerance = 1e-12)
   }
 })
@@ -62,14 +64,16 @@ test_that("run_bytecode errors on missing variable", {
 random_eml_tree <- function(max_depth, var_names = c("x", "y")) {
   if (max_depth == 0 || runif(1) < 0.4) {
     if (runif(1) < 0.5) {
-      return(sample(c(1, 1, 1, 0.5, 2), 1))   # bias toward 1
+      return(sample(c(1, 1, 1, 0.5, 2), 1)) # bias toward 1
     } else {
       return(as.name(sample(var_names, 1)))
     }
   }
-  call("eml",
-       random_eml_tree(max_depth - 1, var_names),
-       random_eml_tree(max_depth - 1, var_names))
+  call(
+    "eml",
+    random_eml_tree(max_depth - 1, var_names),
+    random_eml_tree(max_depth - 1, var_names)
+  )
 }
 
 test_that("run_bytecode == eml_eval on 100 random trees", {
@@ -77,10 +81,12 @@ test_that("run_bytecode == eml_eval on 100 random trees", {
   agree <- TRUE
   for (i in seq_len(100)) {
     expr <- random_eml_tree(sample.int(5, 1))
-    vars <- list(x = runif(20, 0.1, 5),
-                 y = runif(20, 0.1, 5))
+    vars <- list(
+      x = runif(20, 0.1, 5),
+      y = runif(20, 0.1, 5)
+    )
     v_eval <- eml_eval(expr, vars)
-    v_bc   <- run_bytecode(compile_eml(expr), vars)
+    v_bc <- run_bytecode(compile_eml(expr), vars)
     if (!isTRUE(all.equal(v_bc, v_eval, tolerance = 1e-10))) {
       agree <- FALSE
       break

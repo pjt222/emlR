@@ -52,14 +52,18 @@ match_eml <- function(expr, pattern, bindings = list(), tol = 0) {
   if (.is_metavar(pattern)) {
     nm <- as.character(pattern)
     if (nm %in% names(bindings)) {
-      if (identical(bindings[[nm]], expr)) return(bindings)
+      if (identical(bindings[[nm]], expr)) {
+        return(bindings)
+      }
       return(NULL)
     }
     bindings[[nm]] <- expr
     return(bindings)
   }
   if (is.name(pattern)) {
-    if (identical(pattern, expr)) return(bindings)
+    if (identical(pattern, expr)) {
+      return(bindings)
+    }
     return(NULL)
   }
   if (is.atomic(pattern) && length(pattern) == 1L) {
@@ -72,7 +76,7 @@ match_eml <- function(expr, pattern, bindings = list(), tol = 0) {
       # rules opt in to `tol = 1e-12` because tree_i() = exp(log(-1)/2)
       # produces 6.12e-17 + 1i instead of an exact 0+1i).
       if ((is.numeric(pattern) || is.complex(pattern)) &&
-          (is.numeric(expr)    || is.complex(expr))) {
+        (is.numeric(expr) || is.complex(expr))) {
         if (tol > 0) {
           if (isTRUE(abs(as.complex(expr) - as.complex(pattern)) < tol)) {
             return(bindings)
@@ -84,17 +88,27 @@ match_eml <- function(expr, pattern, bindings = list(), tol = 0) {
         }
         return(NULL)
       }
-      if (identical(expr, pattern)) return(bindings)
+      if (identical(expr, pattern)) {
+        return(bindings)
+      }
     }
     return(NULL)
   }
   if (is.call(pattern)) {
-    if (!is.call(expr)) return(NULL)
-    if (length(pattern) != length(expr)) return(NULL)
-    if (!identical(pattern[[1L]], expr[[1L]])) return(NULL)
+    if (!is.call(expr)) {
+      return(NULL)
+    }
+    if (length(pattern) != length(expr)) {
+      return(NULL)
+    }
+    if (!identical(pattern[[1L]], expr[[1L]])) {
+      return(NULL)
+    }
     for (i in seq_len(length(pattern) - 1L) + 1L) {
       bindings <- match_eml(expr[[i]], pattern[[i]], bindings, tol = tol)
-      if (is.null(bindings)) return(NULL)
+      if (is.null(bindings)) {
+        return(NULL)
+      }
     }
     return(bindings)
   }
@@ -120,9 +134,9 @@ match_eml <- function(expr, pattern, bindings = list(), tol = 0) {
 #' @param expr an EML expression.
 #' @return An EML expression (literal or call).
 #' @examples
-#' simplify_eml(quote(eml(1, 1)))          # numeric e (folded)
-#' simplify_eml(quote(eml(x, 1)))          # unchanged
-#' simplify_eml(quote(eml(x, eml(1, 1))))  # eml(x, e)
+#' simplify_eml(quote(eml(1, 1))) # numeric e (folded)
+#' simplify_eml(quote(eml(x, 1))) # unchanged
+#' simplify_eml(quote(eml(x, eml(1, 1)))) # eml(x, e)
 #' @seealso [simplify_native()] for the mode that collapses to base-R
 #'   primitives (use this for inspection/verification; use
 #'   `simplify_eml` for SR training where the EML grammar must be
@@ -130,16 +144,22 @@ match_eml <- function(expr, pattern, bindings = list(), tol = 0) {
 #' @export
 simplify_eml <- function(expr) {
   if (!.tree_uses_only_safe_heads(expr)) {
-    stop("simplify_eml: `expr` contains a call to a function that ",
-         "is not part of the EML or simplifier vocabulary. Allowed ",
-         "heads: ",
-         paste(.SAFE_SIMPLIFIER_HEADS, collapse = ", "), ".")
+    stop(
+      "simplify_eml: `expr` contains a call to a function that ",
+      "is not part of the EML or simplifier vocabulary. Allowed ",
+      "heads: ",
+      paste(.SAFE_SIMPLIFIER_HEADS, collapse = ", "), "."
+    )
   }
-  if (!is.call(expr)) return(expr)
+  if (!is.call(expr)) {
+    return(expr)
+  }
   # Pass non-EML calls through unchanged. (After the safe-heads guard
   # above, these can only be exp/log/sqrt/arithmetic from re-applying
   # the function to simplifier output.)
-  if (!identical(expr[[1L]], as.name("eml"))) return(expr)
+  if (!identical(expr[[1L]], as.name("eml"))) {
+    return(expr)
+  }
   if (length(all.vars(expr)) == 0L) {
     return(eval(expr, list2env(list(eml = eml), parent = emptyenv())))
   }
@@ -155,13 +175,22 @@ simplify_eml <- function(expr) {
 # call("-", 4), so guards that need the actual base value must fold
 # rather than just inspect the AST shape.
 .fold_to_scalar <- function(x) {
-  if (length(all.vars(x)) > 0L) return(NULL)
+  if (length(all.vars(x)) > 0L) {
+    return(NULL)
+  }
   v <- tryCatch(eval(x, .complex_fold_env()),
-                error = function(e) NULL,
-                warning = function(w) NULL)
-  if (is.null(v) || length(v) != 1L) return(NULL)
-  if (!(is.numeric(v) || is.complex(v))) return(NULL)
-  if (!is.finite(v)) return(NULL)
+    error = function(e) NULL,
+    warning = function(w) NULL
+  )
+  if (is.null(v) || length(v) != 1L) {
+    return(NULL)
+  }
+  if (!(is.numeric(v) || is.complex(v))) {
+    return(NULL)
+  }
+  if (!is.finite(v)) {
+    return(NULL)
+  }
   v
 }
 
@@ -172,10 +201,16 @@ simplify_eml <- function(expr) {
 # non-zero imaginary part (R's complex `^` matches the EML chain's
 # principal-branch value there).
 .pow_base_safe <- function(x) {
-  if (length(all.vars(x)) > 0L) return(TRUE)
+  if (length(all.vars(x)) > 0L) {
+    return(TRUE)
+  }
   v <- .fold_to_scalar(x)
-  if (is.null(v)) return(FALSE)
-  if (is.complex(v) && Im(v) != 0) return(TRUE)
+  if (is.null(v)) {
+    return(FALSE)
+  }
+  if (is.complex(v) && Im(v) != 0) {
+    return(TRUE)
+  }
   Re(v) > 0
 }
 
@@ -183,9 +218,13 @@ simplify_eml <- function(expr) {
 # is allowed (catalog flows do not produce out-of-strip values);
 # atomic / closed _x must fold to a value in the principal strip.
 .log_exp_unwrap_safe <- function(x) {
-  if (length(all.vars(x)) > 0L) return(TRUE)
+  if (length(all.vars(x)) > 0L) {
+    return(TRUE)
+  }
   v <- .fold_to_scalar(x)
-  if (is.null(v)) return(FALSE)
+  if (is.null(v)) {
+    return(FALSE)
+  }
   abs(Im(as.complex(v))) <= base::pi
 }
 
@@ -196,46 +235,62 @@ simplify_eml <- function(expr) {
 .native_rules <- function() {
   list(
     # N3: log via paper Eq. 5. Most specific structure — must come before N1.
-    list(name = "N3",
-         lhs  = quote(eml(1, eml(eml(1, `_x`), 1))),
-         rhs  = quote(log(`_x`))),
+    list(
+      name = "N3",
+      lhs = quote(eml(1, eml(eml(1, `_x`), 1))),
+      rhs = quote(log(`_x`))
+    ),
 
     # N4: subtraction directly from defn.
-    list(name = "N4",
-         lhs  = quote(eml(log(`_x`), exp(`_y`))),
-         rhs  = quote(`_x` - `_y`)),
+    list(
+      name = "N4",
+      lhs = quote(eml(log(`_x`), exp(`_y`))),
+      rhs = quote(`_x` - `_y`)
+    ),
 
     # N5: eml(log(x), 1) = exp(log(x)) - log(1) = x.
-    list(name = "N5",
-         lhs  = quote(eml(log(`_x`), 1)),
-         rhs  = quote(`_x`)),
+    list(
+      name = "N5",
+      lhs = quote(eml(log(`_x`), 1)),
+      rhs = quote(`_x`)
+    ),
 
     # N7: eml(_x, exp(_y)) = exp(_x) - _y.
-    list(name = "N7",
-         lhs  = quote(eml(`_x`, exp(`_y`))),
-         rhs  = quote(exp(`_x`) - `_y`)),
+    list(
+      name = "N7",
+      lhs = quote(eml(`_x`, exp(`_y`))),
+      rhs = quote(exp(`_x`) - `_y`)
+    ),
 
     # N6: eml(0, _y) = 1 - log(_y).
-    list(name = "N6",
-         lhs  = quote(eml(0, `_y`)),
-         rhs  = quote(1 - log(`_y`))),
+    list(
+      name = "N6",
+      lhs = quote(eml(0, `_y`)),
+      rhs = quote(1 - log(`_y`))
+    ),
 
     # N2: e literal (folded).
-    list(name = "N2",
-         lhs  = quote(eml(1, 1)),
-         rhs  = quote(exp(1))),
+    list(
+      name = "N2",
+      lhs = quote(eml(1, 1)),
+      rhs = quote(exp(1))
+    ),
 
     # N5b: general log-on-left.  exp(log(_x)) - log(_y) = _x - log(_y).
     # Subsumes N5 (taking _y = 1, log(1) = 0) but kept after N5 so the
     # cleaner form fires first when applicable.
-    list(name = "N5b",
-         lhs  = quote(eml(log(`_x`), `_y`)),
-         rhs  = quote(`_x` - log(`_y`))),
+    list(
+      name = "N5b",
+      lhs = quote(eml(log(`_x`), `_y`)),
+      rhs = quote(`_x` - log(`_y`))
+    ),
 
     # N1: exp directly from paper. Most general — last among eml rules.
-    list(name = "N1",
-         lhs  = quote(eml(`_x`, 1)),
-         rhs  = quote(exp(`_x`)))
+    list(
+      name = "N1",
+      lhs = quote(eml(`_x`, 1)),
+      rhs = quote(exp(`_x`))
+    )
   )
 }
 
@@ -251,56 +306,78 @@ simplify_eml <- function(expr) {
     # on atomic literals whose imaginary part exits the strip.
     # Symbolic _x is allowed (catalog flows that nest log(exp(.)) inside
     # the simplifier do not produce out-of-strip values in practice).
-    list(name = "C-log-exp",
-         lhs  = quote(log(exp(`_x`))),
-         rhs  = quote(`_x`),
-         guard = function(b) .log_exp_unwrap_safe(b[["_x"]])),
-    list(name = "C-exp-log",
-         lhs  = quote(exp(log(`_x`))),
-         rhs  = quote(`_x`)),
+    list(
+      name = "C-log-exp",
+      lhs = quote(log(exp(`_x`))),
+      rhs = quote(`_x`),
+      guard = function(b) .log_exp_unwrap_safe(b[["_x"]])
+    ),
+    list(
+      name = "C-exp-log",
+      lhs = quote(exp(log(`_x`))),
+      rhs = quote(`_x`)
+    ),
 
     # Subtraction identities — let `0 - x` collapse to `-x` so subsequent
     # `_x - (-_y) -> _x + _y` rule can fire.
-    list(name = "C-zero-minus",
-         lhs  = quote(0 - `_x`),
-         rhs  = quote(-`_x`)),
-    list(name = "C-minus-zero",
-         lhs  = quote(`_x` - 0),
-         rhs  = quote(`_x`)),
-    list(name = "C-double-neg",
-         lhs  = quote(- -`_x`),
-         rhs  = quote(`_x`)),
-    list(name = "C-sub-neg",
-         lhs  = quote(`_x` - -`_y`),
-         rhs  = quote(`_x` + `_y`)),
+    list(
+      name = "C-zero-minus",
+      lhs = quote(0 - `_x`),
+      rhs = quote(-`_x`)
+    ),
+    list(
+      name = "C-minus-zero",
+      lhs = quote(`_x` - 0),
+      rhs = quote(`_x`)
+    ),
+    list(
+      name = "C-double-neg",
+      lhs = quote(--`_x`),
+      rhs = quote(`_x`)
+    ),
+    list(
+      name = "C-sub-neg",
+      lhs = quote(`_x` - -`_y`),
+      rhs = quote(`_x` + `_y`)
+    ),
 
     # eml(log(0), _y) — extended-real residue from tree_minus/add/mul.
     # Proof: exp(log(0)) - log(_y) = 0 - log(_y) = -log(_y).
-    list(name = "C-eml-log0",
-         lhs  = quote(eml(log(0), `_y`)),
-         rhs  = quote(-log(`_y`))),
+    list(
+      name = "C-eml-log0",
+      lhs = quote(eml(log(0), `_y`)),
+      rhs = quote(-log(`_y`))
+    ),
 
     # log(_x) + log(_y) = log(_x * _y) and log(_x) - log(_y) = log(_x / _y)
-    list(name = "C-log-prod",
-         lhs  = quote(log(`_x`) + log(`_y`)),
-         rhs  = quote(log(`_x` * `_y`))),
-    list(name = "C-log-quot",
-         lhs  = quote(log(`_x`) - log(`_y`)),
-         rhs  = quote(log(`_x` / `_y`))),
+    list(
+      name = "C-log-prod",
+      lhs = quote(log(`_x`) + log(`_y`)),
+      rhs = quote(log(`_x` * `_y`))
+    ),
+    list(
+      name = "C-log-quot",
+      lhs = quote(log(`_x`) - log(`_y`)),
+      rhs = quote(log(`_x` / `_y`))
+    ),
 
     # exp(_y * log(_x)) = _x ^ _y    — pow shortcut.
     # Sound on the principal branch when _x is symbolic (the user is
     # responsible for the domain at eval time) or atomic positive
     # real. For atomic negative real, R's `^` returns NaN
     # (real-domain semantics), breaking I3 — so refuse to fire.
-    list(name = "C-exp-mul-log",
-         lhs  = quote(exp(`_y` * log(`_x`))),
-         rhs  = quote(`_x` ^ `_y`),
-         guard = function(b) .pow_base_safe(b[["_x"]])),
-    list(name = "C-exp-log-mul",
-         lhs  = quote(exp(log(`_x`) * `_y`)),
-         rhs  = quote(`_x` ^ `_y`),
-         guard = function(b) .pow_base_safe(b[["_x"]])),
+    list(
+      name = "C-exp-mul-log",
+      lhs = quote(exp(`_y` * log(`_x`))),
+      rhs = quote(`_x`^`_y`),
+      guard = function(b) .pow_base_safe(b[["_x"]])
+    ),
+    list(
+      name = "C-exp-log-mul",
+      lhs = quote(exp(log(`_x`) * `_y`)),
+      rhs = quote(`_x`^`_y`),
+      guard = function(b) .pow_base_safe(b[["_x"]])
+    ),
 
     # exp(_C + log(_x)) = exp(_C) * _x    — re-merge constants that
     # premature folding has lifted out of a log. Sound on the principal
@@ -312,15 +389,17 @@ simplify_eml <- function(expr) {
     # - |Re(_C)| < 700 — beyond that, exp(_C) overflows to Inf or
     #   underflows to 0 even though the unsimplified form
     #   exp(_C + log(_x)) may evaluate finitely via cancellation.
-    list(name = "C-exp-const-plus-log",
-         lhs  = quote(exp(`_C` + log(`_x`))),
-         rhs  = quote(exp(`_C`) * `_x`),
-         guard = function(b) {
-           v <- b[["_C"]]
-           is.atomic(v) && length(v) == 1L &&
-             (is.numeric(v) || is.complex(v)) &&
-             abs(Re(as.complex(v))) < 700
-         })
+    list(
+      name = "C-exp-const-plus-log",
+      lhs = quote(exp(`_C` + log(`_x`))),
+      rhs = quote(exp(`_C`) * `_x`),
+      guard = function(b) {
+        v <- b[["_C"]]
+        is.atomic(v) && length(v) == 1L &&
+          (is.numeric(v) || is.complex(v)) &&
+          abs(Re(as.complex(v))) < 700
+      }
+    )
   )
 }
 
@@ -354,8 +433,11 @@ simplify_eml <- function(expr) {
 # is preserved. Collapses purely-real complex back to real for cleaner
 # downstream arithmetic.
 .snap_zero <- function(z, tol = 1e-12) {
-  if (!is.complex(z) || length(z) != 1L || !is.finite(z)) return(z)
-  re <- Re(z); im <- Im(z)
+  if (!is.complex(z) || length(z) != 1L || !is.finite(z)) {
+    return(z)
+  }
+  re <- Re(z)
+  im <- Im(z)
   if (abs(im) < tol && abs(re) >= tol) {
     z <- complex(real = re, imaginary = 0)
   } else if (abs(re) < tol && abs(im) >= tol) {
@@ -369,7 +451,9 @@ simplify_eml <- function(expr) {
 # value is finite; otherwise leaves the structural form in place so the
 # user (or downstream code) can choose how to handle the divergence.
 .fold_constants <- function(expr) {
-  if (!is.call(expr)) return(expr)
+  if (!is.call(expr)) {
+    return(expr)
+  }
   if (length(all.vars(expr)) == 0L) {
     val <- tryCatch(
       eval(expr, .complex_fold_env()),
@@ -377,8 +461,8 @@ simplify_eml <- function(expr) {
       warning = function(w) NULL
     )
     if (!is.null(val) && length(val) == 1L &&
-        (is.numeric(val) || is.complex(val)) &&
-        is.finite(Re(val)) && is.finite(Im(val))) {
+      (is.numeric(val) || is.complex(val)) &&
+      is.finite(Re(val)) && is.finite(Im(val))) {
       return(.snap_zero(val))
     }
   }
@@ -396,8 +480,10 @@ simplify_eml <- function(expr) {
     bindings <- match_eml(expr, rule$lhs, tol = rule_tol)
     if (!is.null(bindings)) {
       if (!is.null(rule$guard) && !isTRUE(rule$guard(bindings))) next
-      return(list(expr = .subst_bindings(rule$rhs, bindings),
-                  rule = rule$name))
+      return(list(
+        expr = .subst_bindings(rule$rhs, bindings),
+        rule = rule$name
+      ))
     }
   }
   NULL
@@ -418,8 +504,10 @@ simplify_eml <- function(expr) {
     return(.rewrite_top_down(hit$expr, rules, trace_env))
   }
   if (is.call(expr)) {
-    new_args <- lapply(as.list(expr)[-1L],
-                       function(a) .rewrite_top_down(a, rules, trace_env))
+    new_args <- lapply(
+      as.list(expr)[-1L],
+      function(a) .rewrite_top_down(a, rules, trace_env)
+    )
     new_expr <- as.call(c(list(expr[[1L]]), new_args))
     # Fold sub-trees with no free variables before retrying parent rules,
     # so e.g. an emerging `log(1)` collapses to `0` and a parent rule
@@ -470,9 +558,9 @@ simplify_eml <- function(expr) {
 #' @return The simplified expression, or — if `trace = TRUE` — a list
 #'   containing the simplified expression plus the firing trace.
 #' @examples
-#' simplify_native(quote(eml(x, 1)))                            # exp(x)
-#' simplify_native(quote(eml(1, eml(eml(1, x), 1))))             # log(x)
-#' simplify_native(quote(eml(log(a), exp(b))))                   # a - b
+#' simplify_native(quote(eml(x, 1))) # exp(x)
+#' simplify_native(quote(eml(1, eml(eml(1, x), 1)))) # log(x)
+#' simplify_native(quote(eml(log(a), exp(b)))) # a - b
 #' @seealso [simplify_eml()] for the mode that stays inside the EML
 #'   grammar (constant folding only); [eml_catalog()] / [verify_catalog()]
 #'   for the test surface this rule set is tuned against.
@@ -481,10 +569,12 @@ simplify_eml <- function(expr) {
 #   node_type:"process", input:"ast.internal", output:"native_expr.internal"
 simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
   if (!.tree_uses_only_safe_heads(expr)) {
-    stop("simplify_native: `expr` contains a call to a function that ",
-         "is not part of the EML or simplifier vocabulary. Allowed ",
-         "heads: ",
-         paste(.SAFE_SIMPLIFIER_HEADS, collapse = ", "), ".")
+    stop(
+      "simplify_native: `expr` contains a call to a function that ",
+      "is not part of the EML or simplifier vocabulary. Allowed ",
+      "heads: ",
+      paste(.SAFE_SIMPLIFIER_HEADS, collapse = ", "), "."
+    )
   }
   rules <- c(.native_rules(), .native_cleanup_rules())
   if (isTRUE(include_euler)) {
@@ -492,7 +582,9 @@ simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
   }
   trace_env <- if (isTRUE(trace)) {
     new.env(parent = emptyenv())
-  } else NULL
+  } else {
+    NULL
+  }
   if (!is.null(trace_env)) {
     trace_env$rules <- character(0)
     trace_env$intermediates <- list()
@@ -516,9 +608,11 @@ simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
   }
 
   if (isTRUE(trace)) {
-    return(list(result = curr,
-                rules = trace_env$rules,
-                intermediates = trace_env$intermediates))
+    return(list(
+      result = curr,
+      rules = trace_env$rules,
+      intermediates = trace_env$intermediates
+    ))
   }
   curr
 }
@@ -530,7 +624,7 @@ simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
 # round-off in tree_i() = exp(log(-1)/2), which yields 6.12e-17 + 1i
 # rather than an exact 0+1i.
 .euler_rules <- function() {
-  ix     <- call("*", 0+1i, as.name("_x"))
+  ix <- call("*", 0 + 1i, as.name("_x"))
   neg_ix <- call("-", ix)
   # Tolerance ONLY on Euler patterns. The Euler RHSs need to match
   # `0+1i` and `0+2i` against the residue of tree_i() = exp(log(-1)/2),
@@ -538,17 +632,25 @@ simplify_native <- function(expr, include_euler = TRUE, trace = FALSE) {
   # (the default tol = 0) so user-supplied literals like `1e-13` do
   # not get matched against `0`.
   list(
-    list(name = "E1",
-         lhs  = call("/",
-                     call("-", call("exp", ix), call("exp", neg_ix)),
-                     0+2i),
-         rhs  = quote(sin(`_x`)),
-         tol  = 1e-12),
-    list(name = "E2",
-         lhs  = call("/",
-                     call("+", call("exp", ix), call("exp", neg_ix)),
-                     2),
-         rhs  = quote(cos(`_x`)),
-         tol  = 1e-12)
+    list(
+      name = "E1",
+      lhs = call(
+        "/",
+        call("-", call("exp", ix), call("exp", neg_ix)),
+        0 + 2i
+      ),
+      rhs = quote(sin(`_x`)),
+      tol = 1e-12
+    ),
+    list(
+      name = "E2",
+      lhs = call(
+        "/",
+        call("+", call("exp", ix), call("exp", neg_ix)),
+        2
+      ),
+      rhs = quote(cos(`_x`)),
+      tol = 1e-12
+    )
   )
 }

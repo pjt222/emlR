@@ -14,9 +14,9 @@
 #' @param x,y numeric or complex (length 1 or vectors of equal length).
 #' @return Complex.
 #' @examples
-#' eml(1, 1)                    # exp(1) - log(1) = e
-#' eml(0, -1)                   # 1 - i*pi    (principal-branch log)
-#' Re(eml(-Inf, exp(1)))        # -1, via extended-real semantics
+#' eml(1, 1) # exp(1) - log(1) = e
+#' eml(0, -1) # 1 - i*pi    (principal-branch log)
+#' Re(eml(-Inf, exp(1))) # -1, via extended-real semantics
 #' @seealso [eml_real()] for the real-valued wrapper, [eml_eval()] for
 #'   evaluating an EML expression with variable bindings.
 #' @export
@@ -34,15 +34,17 @@ eml <- function(x, y) {
 #'   skip the check.
 #' @return Numeric.
 #' @examples
-#' eml_real(1, 1)               # e ~ 2.718
-#' eml_real(0.5, 1)             # exp(0.5)
+#' eml_real(1, 1) # e ~ 2.718
+#' eml_real(0.5, 1) # exp(0.5)
 #' @seealso [eml()] for the underlying complex-domain operator.
 #' @export
 eml_real <- function(x, y, tol = 1e-9) {
   z <- eml(x, y)
   if (!is.na(tol) && any(abs(Im(z)) > tol, na.rm = TRUE)) {
-    warning(sprintf("eml_real: max |Im| = %.3g exceeds tol %.3g",
-                    max(abs(Im(z)), na.rm = TRUE), tol))
+    warning(sprintf(
+      "eml_real: max |Im| = %.3g exceeds tol %.3g",
+      max(abs(Im(z)), na.rm = TRUE), tol
+    ))
   }
   Re(z)
 }

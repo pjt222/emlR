@@ -34,9 +34,9 @@ library(emlR)
 The operator itself:
 
 ```{r eml-basic}
-eml(1, 1)            # exp(1) - log(1) = e
-eml(0, 1)            # exp(0) - log(1) = 1
-eml(0, -1)           # 1 - i*pi (principal-branch log of -1)
+eml(1, 1) # exp(1) - log(1) = e
+eml(0, 1) # exp(0) - log(1) = 1
+eml(0, -1) # 1 - i*pi (principal-branch log of -1)
 ```
 
 It is internally complex (the principal branch of `log` is required for
@@ -55,9 +55,9 @@ preserve. emlR verifies them in `simplify_native()`, the rewriter that
 collapses recognised EML patterns to base-R primitives.
 
 ```{r sacred}
-simplify_native(quote(eml(x, 1)))                          # exp(x)
-simplify_native(quote(eml(1, 1)))                          # e (folded)
-simplify_native(quote(eml(1, eml(eml(1, x), 1))))           # log(x), paper Eq. 5, K=7
+simplify_native(quote(eml(x, 1))) # exp(x)
+simplify_native(quote(eml(1, 1))) # e (folded)
+simplify_native(quote(eml(1, eml(eml(1, x), 1)))) # log(x), paper Eq. 5, K=7
 ```
 
 The third identity is the headline of the paper: with K = 7 nodes (or
@@ -66,9 +66,9 @@ exactly `log(x)`.
 
 ```{r rpn}
 log_expr <- quote(eml(1, eml(eml(1, x), 1)))
-eml_K(log_expr)        # 7  (paper K)
-eml_depth(log_expr)    # 3
-eml_rpn(log_expr)      # "1 1 x E 1 E E"
+eml_K(log_expr) # 7  (paper K)
+eml_depth(log_expr) # 3
+eml_rpn(log_expr) # "1 1 x E 1 E E"
 ```
 
 ## Native R AST
@@ -86,8 +86,8 @@ identical(e, bquote(eml(1, eml(eml(1, .(quote(x))), 1))))
 You can also build expressions programmatically:
 
 ```{r constructors}
-eml_node(1, "x")                   # eml(1, x)
-E(1, E(E(1, "x"), 1))              # E() shorthand — paper Eq. 5
+eml_node(1, "x") # eml(1, x)
+E(1, E(E(1, "x"), 1)) # E() shorthand — paper Eq. 5
 ```
 
 ## Evaluating expressions
@@ -142,13 +142,13 @@ verify_catalog(verbose = FALSE)
 trigonometric and root constructions — to its base-R form literally:
 
 ```{r catalog-simplify}
-simplify_native(catalog$mul)                   # x * y
-simplify_native(catalog$div)                   # x / y
-simplify_native(catalog$pow)                   # x ^ y
-simplify_native(catalog$sqrt)                  # x^0.5
-simplify_native(catalog$sin)                   # sin(x)
-simplify_native(catalog$cos)                   # cos(x)
-simplify_native(catalog$pi)                    # ≈ pi
+simplify_native(catalog$mul) # x * y
+simplify_native(catalog$div) # x / y
+simplify_native(catalog$pow) # x ^ y
+simplify_native(catalog$sqrt) # x^0.5
+simplify_native(catalog$sin) # sin(x)
+simplify_native(catalog$cos) # cos(x)
+simplify_native(catalog$pi) # ≈ pi
 ```
 
 Reaching `sin(x)` and `cos(x)` requires the cleanup rule

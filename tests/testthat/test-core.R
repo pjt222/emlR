@@ -72,14 +72,14 @@ test_that("predicates classify correctly", {
   expect_true(is_eml_expr(quote(x)))
   expect_true(is_eml_expr(quote(eml(1, eml(eml(1, x), 1)))))
   expect_false(is_eml_expr(quote(x + y)))
-  expect_false(is_eml_expr(quote(eml(x + 1, 1))))   # child not EML
+  expect_false(is_eml_expr(quote(eml(x + 1, 1)))) # child not EML
 })
 
 test_that("eml_K returns total node count (paper definition)", {
   expect_identical(eml_K(1), 1L)
   expect_identical(eml_K(quote(x)), 1L)
-  expect_identical(eml_K(quote(eml(1, 1))), 3L)        # e, paper
-  expect_identical(eml_K(quote(eml(x, 1))), 3L)        # exp, paper
+  expect_identical(eml_K(quote(eml(1, 1))), 3L) # e, paper
+  expect_identical(eml_K(quote(eml(x, 1))), 3L) # exp, paper
   # log(x): paper Eq. 5, K = 7
   expect_identical(eml_K(quote(eml(1, eml(eml(1, x), 1)))), 7L)
 })
@@ -101,6 +101,8 @@ test_that("eml_depth returns root-zero depth", {
 test_that("eml_rpn matches paper for the K=7 log(x) expression", {
   expect_identical(eml_rpn(quote(eml(x, 1))), "x 1 E")
   expect_identical(eml_rpn(quote(eml(1, 1))), "1 1 E")
-  expect_identical(eml_rpn(quote(eml(1, eml(eml(1, x), 1)))),
-                   "1 1 x E 1 E E")
+  expect_identical(
+    eml_rpn(quote(eml(1, eml(eml(1, x), 1)))),
+    "1 1 x E 1 E E"
+  )
 })

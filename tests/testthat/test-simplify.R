@@ -32,19 +32,25 @@ test_that("match_eml: linear repeated metavar binding", {
 })
 
 test_that("match_eml: nested patterns", {
-  out <- match_eml(quote(eml(eml(1, x), 1)),
-                   quote(eml(eml(1, `_a`), 1)))
+  out <- match_eml(
+    quote(eml(eml(1, x), 1)),
+    quote(eml(eml(1, `_a`), 1))
+  )
   expect_equal(out, list(`_a` = quote(x)))
 
   # The whole paper-Eq.5 shape
-  out <- match_eml(quote(eml(1, eml(eml(1, y), 1))),
-                   quote(eml(1, eml(eml(1, `_x`), 1))))
+  out <- match_eml(
+    quote(eml(1, eml(eml(1, y), 1))),
+    quote(eml(1, eml(eml(1, `_x`), 1)))
+  )
   expect_equal(out, list(`_x` = quote(y)))
 })
 
 test_that("match_eml: pattern with named function symbol", {
-  out <- match_eml(quote(eml(log(a), exp(b))),
-                   quote(eml(log(`_x`), exp(`_y`))))
+  out <- match_eml(
+    quote(eml(log(a), exp(b))),
+    quote(eml(log(`_x`), exp(`_y`)))
+  )
   expect_equal(out, list(`_x` = quote(a), `_y` = quote(b)))
 })
 
@@ -59,8 +65,10 @@ test_that("simplify_eml folds constant-only expressions", {
 
 test_that("simplify_eml leaves expressions with free variables", {
   expect_identical(simplify_eml(quote(eml(x, 1))), quote(eml(x, 1)))
-  expect_identical(simplify_eml(quote(eml(1, eml(eml(1, x), 1)))),
-                   quote(eml(1, eml(eml(1, x), 1))))
+  expect_identical(
+    simplify_eml(quote(eml(1, eml(eml(1, x), 1)))),
+    quote(eml(1, eml(eml(1, x), 1)))
+  )
 })
 
 test_that("simplify_eml folds constant subtrees inside variable contexts", {
@@ -80,7 +88,7 @@ test_that("simplify_eml is idempotent", {
     quote(eml(x, eml(1, 1)))
   )
   for (e in inputs) {
-    once  <- simplify_eml(e)
+    once <- simplify_eml(e)
     twice <- simplify_eml(once)
     expect_identical(once, twice)
   }
@@ -101,18 +109,24 @@ test_that("N2: eml(1, 1) -> exp(1) (folded to numeric e)", {
 })
 
 test_that("N3: eml(1, eml(eml(1, _x), 1)) -> log(_x)  [headline]", {
-  expect_identical(simplify_native(quote(eml(1, eml(eml(1, x), 1)))),
-                   quote(log(x)))
+  expect_identical(
+    simplify_native(quote(eml(1, eml(eml(1, x), 1)))),
+    quote(log(x))
+  )
 })
 
 test_that("N4: eml(log(_x), exp(_y)) -> _x - _y", {
-  expect_identical(simplify_native(quote(eml(log(a), exp(b)))),
-                   quote(a - b))
+  expect_identical(
+    simplify_native(quote(eml(log(a), exp(b)))),
+    quote(a - b)
+  )
 })
 
 test_that("N5: eml(log(_x), 1) -> _x", {
-  expect_identical(simplify_native(quote(eml(log(x), 1))),
-                   quote(x))
+  expect_identical(
+    simplify_native(quote(eml(log(x), 1))),
+    quote(x)
+  )
 })
 
 test_that("simplify_native is idempotent on the headline forms", {
@@ -123,7 +137,7 @@ test_that("simplify_native is idempotent on the headline forms", {
     quote(eml(log(x), 1))
   )
   for (e in inputs) {
-    once  <- simplify_native(e)
+    once <- simplify_native(e)
     twice <- simplify_native(once)
     expect_identical(once, twice)
   }
@@ -148,7 +162,7 @@ test_that("simplify_eml rejects calls to disallowed heads", {
 })
 
 test_that("simplify_native still accepts re-application of its own output", {
-  once  <- simplify_native(quote(eml(1, eml(eml(1, x), 1))))
+  once <- simplify_native(quote(eml(1, eml(eml(1, x), 1))))
   twice <- simplify_native(once)
   expect_identical(once, twice)
 })
@@ -166,32 +180,39 @@ test_that("simplify_native accepts unary minus on a literal", {
 
 test_that("C-exp-mul-log refuses to collapse exp(0.5 * log(-4))", {
   smp <- simplify_native(quote(exp(0.5 * log(-4))))
-  expect_false(identical(smp, quote(`-4` ^ 0.5)))
+  expect_false(identical(smp, quote(`-4`^0.5)))
   expect_false(identical(smp, call("^", -4, 0.5)))
   expect_equal(as.complex(eval(smp, list())),
-               as.complex(0 + 2i),
-               tolerance = 1e-12)
+    as.complex(0 + 2i),
+    tolerance = 1e-12
+  )
 })
 
 test_that("C-log-exp refuses to drop wrap when |Im| > pi", {
   smp <- simplify_native(quote(log(exp(0 + 4i))))
   expect_false(identical(smp, quote(0 + 4i)))
   expect_equal(as.complex(eval(smp, list())),
-               as.complex(log(exp(0 + 4i))),
-               tolerance = 1e-12)
+    as.complex(log(exp(0 + 4i))),
+    tolerance = 1e-12
+  )
 })
 
 test_that("C-exp-const-plus-log refuses to lift exp(_C) when _C overflows", {
   smp <- simplify_native(quote(exp(710 + log(x))))
   expect_identical(smp, quote(exp(710 + log(x))))
   expect_equal(eval(smp, list(x = 1e-310)),
-               eval(quote(exp(710 + log(x))), list(x = 1e-310)),
-               tolerance = 1e-12)
+    eval(quote(exp(710 + log(x))), list(x = 1e-310)),
+    tolerance = 1e-12
+  )
 })
 
 test_that("matcher tolerance is opt-in: 1e-13 does not match literal 0", {
-  expect_identical(simplify_native(quote(eml(1e-13, x))),
-                   quote(eml(1e-13, x)))
-  expect_identical(simplify_native(quote(eml(x, 1 + 5e-13))),
-                   quote(eml(x, 1.0000000000005)))
+  expect_identical(
+    simplify_native(quote(eml(1e-13, x))),
+    quote(eml(1e-13, x))
+  )
+  expect_identical(
+    simplify_native(quote(eml(x, 1 + 5e-13))),
+    quote(eml(x, 1.0000000000005))
+  )
 })

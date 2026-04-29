@@ -19,21 +19,25 @@
 #' @param expr an EML expression.
 #' @return Integer scalar.
 #' @examples
-#' eml_K(quote(eml(1, 1)))                              # 3 (e)
-#' eml_K(quote(eml(x, 1)))                              # 3 (exp)
-#' eml_K(quote(eml(1, eml(eml(1, x), 1))))              # 7 (log, paper Eq. 5)
+#' eml_K(quote(eml(1, 1))) # 3 (e)
+#' eml_K(quote(eml(x, 1))) # 3 (exp)
+#' eml_K(quote(eml(1, eml(eml(1, x), 1)))) # 7 (log, paper Eq. 5)
 #' @family eml_inspectors
 #' @seealso [eml_leafcount()] for v1's leaf-only count.
 #' @export
 # put id:"ins_metrics", label:"Inspect: K, depth, RPN", node_type:"output", \
 #   input:"ast.internal"
 eml_K <- function(expr) {
-  if (is_eml_const(expr) || is_eml_var(expr)) return(1L)
+  if (is_eml_const(expr) || is_eml_var(expr)) {
+    return(1L)
+  }
   if (is_eml_call(expr)) {
     return(1L + eml_K(expr[[2L]]) + eml_K(expr[[3L]]))
   }
-  stop("eml_K: not an EML expression (",
-       paste(class(expr), collapse = "/"), ").")
+  stop(
+    "eml_K: not an EML expression (",
+    paste(class(expr), collapse = "/"), ")."
+  )
 }
 
 #' Leaf count of an EML expression (v1 semantics)
@@ -45,17 +49,21 @@ eml_K <- function(expr) {
 #' @param expr an EML expression.
 #' @return Integer scalar.
 #' @examples
-#' eml_leafcount(quote(eml(1, eml(eml(1, x), 1))))      # 4 (v1 behaviour)
+#' eml_leafcount(quote(eml(1, eml(eml(1, x), 1)))) # 4 (v1 behaviour)
 #' @family eml_inspectors
 #' @seealso [eml_K()] for the paper's total node count.
 #' @export
 eml_leafcount <- function(expr) {
-  if (is_eml_const(expr) || is_eml_var(expr)) return(1L)
+  if (is_eml_const(expr) || is_eml_var(expr)) {
+    return(1L)
+  }
   if (is_eml_call(expr)) {
     return(eml_leafcount(expr[[2L]]) + eml_leafcount(expr[[3L]]))
   }
-  stop("eml_leafcount: not an EML expression (",
-       paste(class(expr), collapse = "/"), ").")
+  stop(
+    "eml_leafcount: not an EML expression (",
+    paste(class(expr), collapse = "/"), ")."
+  )
 }
 
 #' Depth of an EML expression
@@ -66,17 +74,21 @@ eml_leafcount <- function(expr) {
 #' @param expr an EML expression.
 #' @return Integer scalar.
 #' @examples
-#' eml_depth(quote(eml(x, 1)))                          # 1
-#' eml_depth(quote(eml(1, eml(eml(1, x), 1))))          # 3
+#' eml_depth(quote(eml(x, 1))) # 1
+#' eml_depth(quote(eml(1, eml(eml(1, x), 1)))) # 3
 #' @family eml_inspectors
 #' @export
 eml_depth <- function(expr) {
-  if (is_eml_const(expr) || is_eml_var(expr)) return(0L)
+  if (is_eml_const(expr) || is_eml_var(expr)) {
+    return(0L)
+  }
   if (is_eml_call(expr)) {
     return(1L + max(eml_depth(expr[[2L]]), eml_depth(expr[[3L]])))
   }
-  stop("eml_depth: not an EML expression (",
-       paste(class(expr), collapse = "/"), ").")
+  stop(
+    "eml_depth: not an EML expression (",
+    paste(class(expr), collapse = "/"), ")."
+  )
 }
 
 #' Reverse Polish Notation (RPN) serialisation
@@ -89,16 +101,22 @@ eml_depth <- function(expr) {
 #' @param expr an EML expression.
 #' @return Character scalar.
 #' @examples
-#' eml_rpn(quote(eml(x, 1)))                            # "x 1 E"
-#' eml_rpn(quote(eml(1, eml(eml(1, x), 1))))            # "1 1 x E 1 E E"
+#' eml_rpn(quote(eml(x, 1))) # "x 1 E"
+#' eml_rpn(quote(eml(1, eml(eml(1, x), 1)))) # "1 1 x E 1 E E"
 #' @family eml_inspectors
 #' @export
 eml_rpn <- function(expr) {
-  if (is_eml_const(expr)) return(format(expr))
-  if (is_eml_var(expr))   return(as.character(expr))
+  if (is_eml_const(expr)) {
+    return(format(expr))
+  }
+  if (is_eml_var(expr)) {
+    return(as.character(expr))
+  }
   if (is_eml_call(expr)) {
     return(paste(eml_rpn(expr[[2L]]), eml_rpn(expr[[3L]]), "E"))
   }
-  stop("eml_rpn: not an EML expression (",
-       paste(class(expr), collapse = "/"), ").")
+  stop(
+    "eml_rpn: not an EML expression (",
+    paste(class(expr), collapse = "/"), ")."
+  )
 }

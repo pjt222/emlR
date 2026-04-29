@@ -28,7 +28,9 @@
 #' # Vectorised: log evaluated at 30 points
 #' xs <- seq(0.5, 5, length.out = 30)
 #' lx <- eml_eval(quote(eml(1, eml(eml(1, x), 1))),
-#'                list(x = xs), real = TRUE)
+#'   list(x = xs),
+#'   real = TRUE
+#' )
 #' max(abs(lx - log(xs)))
 #' @seealso [compile_eml()] / [run_bytecode()] for the vectorised
 #'   stack-machine evaluator with the same semantics.
@@ -37,14 +39,16 @@
 #   input:"ast.internal"
 eml_eval <- function(expr, vars = list(), real = FALSE, tol = 1e-8) {
   if (!is_eml_expr(expr)) {
-    stop("eml_eval: `expr` must be an EML expression. ",
-         "Use `eval(expr, ...)` directly to evaluate other R calls.")
+    stop(
+      "eml_eval: `expr` must be an EML expression. ",
+      "Use `eval(expr, ...)` directly to evaluate other R calls."
+    )
   }
   if (!is.list(vars)) {
     stop("eml_eval: `vars` must be a (possibly empty) named list.")
   }
   if (length(vars) > 0L &&
-      (is.null(names(vars)) || !all(nzchar(names(vars))))) {
+    (is.null(names(vars)) || !all(nzchar(names(vars))))) {
     stop("eml_eval: every entry of `vars` must be named.")
   }
   # Restrict the eval env: only the EML operator and the user-supplied
@@ -58,8 +62,10 @@ eml_eval <- function(expr, vars = list(), real = FALSE, tol = 1e-8) {
   # already constrains call heads to the safe set; these injections
   # let the legitimate ones evaluate.
   env <- list2env(c(
-    list(eml = eml,
-         `-` = `-`, `+` = `+`, `(` = `(`),
+    list(
+      eml = eml,
+      `-` = `-`, `+` = `+`, `(` = `(`
+    ),
     vars
   ), parent = emptyenv())
   z <- eval(expr, envir = env)
@@ -71,7 +77,8 @@ eml_eval <- function(expr, vars = list(), real = FALSE, tol = 1e-8) {
     if (!is.na(tol) && any(abs(Im(z)) > tol, na.rm = TRUE)) {
       warning(sprintf(
         "eml_eval: max |Im| = %.3g exceeds tol %.3g",
-        max(abs(Im(z)), na.rm = TRUE), tol))
+        max(abs(Im(z)), na.rm = TRUE), tol
+      ))
     }
     return(Re(z))
   }

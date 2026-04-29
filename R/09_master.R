@@ -22,9 +22,9 @@
 #' @param depth integer >= 1.
 #' @return Integer.
 #' @examples
-#' master_n_params(1)   # 4
-#' master_n_params(2)   # 14
-#' master_n_params(3)   # 34
+#' master_n_params(1) # 4
+#' master_n_params(2) # 14
+#' master_n_params(3) # 34
 #' @family eml_master
 #' @export
 master_n_params <- function(depth) {
@@ -59,19 +59,19 @@ build_master <- function(depth, var_name = "x") {
   build_input <- function(remaining_depth) {
     slot_idx <<- slot_idx + 1L
     a <- as.name(paste0("alpha_", slot_idx))
-    b <- as.name(paste0("beta_",  slot_idx))
+    b <- as.name(paste0("beta_", slot_idx))
     if (remaining_depth == 0L) {
       bquote(.(a) * 1 + .(b) * .(x_sym))
     } else {
       g <- as.name(paste0("gamma_", slot_idx))
-      f_left  <- build_input(remaining_depth - 1L)
+      f_left <- build_input(remaining_depth - 1L)
       f_right <- build_input(remaining_depth - 1L)
       f <- bquote(eml(.(f_left), .(f_right)))
       bquote(.(a) * 1 + .(b) * .(x_sym) + .(g) * .(f))
     }
   }
 
-  left  <- build_input(depth - 1L)
+  left <- build_input(depth - 1L)
   right <- build_input(depth - 1L)
   bquote(eml(.(left), .(right)))
 }
@@ -94,8 +94,10 @@ build_master <- function(depth, var_name = "x") {
 #' @export
 unpack_master_params <- function(par, depth) {
   if (length(par) != master_n_params(depth)) {
-    stop("unpack_master_params: par has length ", length(par),
-         ", expected ", master_n_params(depth), ".")
+    stop(
+      "unpack_master_params: par has length ", length(par),
+      ", expected ", master_n_params(depth), "."
+    )
   }
   out <- list()
   slot_idx <- 0L
@@ -103,7 +105,7 @@ unpack_master_params <- function(par, depth) {
   build <- function(remaining_depth) {
     slot_idx <<- slot_idx + 1L
     out[[paste0("alpha_", slot_idx)]] <<- par[idx]
-    out[[paste0("beta_",  slot_idx)]] <<- par[idx + 1L]
+    out[[paste0("beta_", slot_idx)]] <<- par[idx + 1L]
     if (remaining_depth == 0L) {
       idx <<- idx + 2L
     } else {
@@ -169,35 +171,35 @@ theta_for_exp <- function() {
 #'
 #' @return Numeric vector of length 34.
 #' @examples
-#' length(theta_for_log())          # 34 — matches master_n_params(3)
+#' length(theta_for_log()) # 34 — matches master_n_params(3)
 #' @family eml_master
 #' @export
 theta_for_log <- function() {
-  use_one_inner    <- c(1, 0, 0)
-  use_x_inner      <- c(0, 1, 0)
-  route_f_inner    <- c(0, 0, 1)
-  use_one_leaf     <- c(1, 0)
-  use_x_leaf       <- c(0, 1)
+  use_one_inner <- c(1, 0, 0)
+  use_x_inner <- c(0, 1, 0)
+  route_f_inner <- c(0, 0, 1)
+  use_one_leaf <- c(1, 0)
+  use_x_leaf <- c(0, 1)
 
   # DFS order: root.left subtree (slots 1-7), then root.right (slots 8-14).
   # Root.left subtree must select the literal `1` — i.e., resolve to 1.
   # Easiest: every slot in root.left selects alpha (=> contributes 1).
   # Root.right subtree must produce eml(eml(1, x), 1).
   slots <- list(
-    use_one_inner,    # 1: root.left  inner — pick 1 (alpha)
-    use_one_inner,    # 2: root.left.left  inner
-    use_one_leaf,     # 3: leaf -> 1
-    use_one_leaf,     # 4: leaf -> 1
-    use_one_inner,    # 5: root.left.right inner
-    use_one_leaf,     # 6: leaf -> 1
-    use_one_leaf,     # 7: leaf -> 1
-    route_f_inner,    # 8: root.right inner — route through f
-    route_f_inner,    # 9: root.right.left inner — route through f
-    use_one_leaf,     # 10: leaf -> 1
-    use_x_leaf,       # 11: leaf -> x
-    use_one_inner,    # 12: root.right.right inner — pick 1
-    use_one_leaf,     # 13: leaf -> 1
-    use_one_leaf      # 14: leaf -> 1
+    use_one_inner, # 1: root.left  inner — pick 1 (alpha)
+    use_one_inner, # 2: root.left.left  inner
+    use_one_leaf, # 3: leaf -> 1
+    use_one_leaf, # 4: leaf -> 1
+    use_one_inner, # 5: root.left.right inner
+    use_one_leaf, # 6: leaf -> 1
+    use_one_leaf, # 7: leaf -> 1
+    route_f_inner, # 8: root.right inner — route through f
+    route_f_inner, # 9: root.right.left inner — route through f
+    use_one_leaf, # 10: leaf -> 1
+    use_x_leaf, # 11: leaf -> x
+    use_one_inner, # 12: root.right.right inner — pick 1
+    use_one_leaf, # 13: leaf -> 1
+    use_one_leaf # 14: leaf -> 1
   )
   .slots_to_par(slots, depth = 3L)
 }
@@ -240,7 +242,7 @@ theta_for_log <- function() {
 #' @examples
 #' theta <- theta_for_exp()
 #' snapped <- snap_master_params(theta, depth = 1)
-#' identical(snapped, theta)        # already one-hot
+#' identical(snapped, theta) # already one-hot
 #' @family eml_master
 #' @export
 snap_master_params <- function(par, depth) {
@@ -319,9 +321,11 @@ snap_master_params <- function(par, depth) {
 #' \donttest{
 #' xs <- seq(0.5, 5, length.out = 30)
 #' ys <- log(xs)
-#' fit <- eml_fit(xs, ys, depth = 3, n_restarts = 2,
-#'                maxit = 200, seed = 1)
-#' fit$snap_mse  # ~ 0 indicates exact symbolic recovery of log(x)
+#' fit <- eml_fit(xs, ys,
+#'   depth = 3, n_restarts = 2,
+#'   maxit = 200, seed = 1
+#' )
+#' fit$snap_mse # ~ 0 indicates exact symbolic recovery of log(x)
 #' }
 #' @family eml_master
 #' @export
@@ -338,7 +342,7 @@ eml_fit <- function(x, y, depth = 3L,
   parameterization <- match.arg(parameterization)
   n_par <- master_n_params(depth)
 
-  master  <- build_master(depth, var_name = "x")
+  master <- build_master(depth, var_name = "x")
   expanded <- .expand_eml(master)
   par_names <- .master_param_names(depth)
   grad_exprs <- .master_grad_exprs(expanded, par_names)
@@ -346,27 +350,36 @@ eml_fit <- function(x, y, depth = 3L,
   # Build the prediction and gradient closures over a working env.
   to_theta <- if (parameterization == "simplex") {
     function(par) .softmax_slots(par, depth)
-  } else identity
+  } else {
+    identity
+  }
 
   PENALTY <- 1e10
   loss_and_grad <- function(par) {
     theta_par <- to_theta(par)
     bindings <- unpack_master_params(theta_par, depth)
     env <- list2env(c(list(eml = eml), bindings, list(x = x)),
-                    parent = baseenv())
+      parent = baseenv()
+    )
     pred <- tryCatch(suppressWarnings(Re(eval(master, env))),
-                     error = function(e) NULL)
+      error = function(e) NULL
+    )
     if (is.null(pred) || any(!is.finite(pred))) {
       return(list(value = PENALTY, grad = rep(0, n_par)))
     }
     resid <- pred - y
-    val   <- mean(resid^2)
-    if (!is.finite(val)) return(list(value = PENALTY, grad = rep(0, n_par)))
+    val <- mean(resid^2)
+    if (!is.finite(val)) {
+      return(list(value = PENALTY, grad = rep(0, n_par)))
+    }
 
     g_theta <- vapply(seq_along(par_names), function(k) {
       gp <- tryCatch(suppressWarnings(Re(eval(grad_exprs[[k]], env))),
-                     error = function(e) NULL)
-      if (is.null(gp) || any(!is.finite(gp))) return(NA_real_)
+        error = function(e) NULL
+      )
+      if (is.null(gp) || any(!is.finite(gp))) {
+        return(NA_real_)
+      }
       mean(2 * resid * gp)
     }, numeric(1))
 
@@ -376,7 +389,9 @@ eml_fit <- function(x, y, depth = 3L,
 
     g_par <- if (parameterization == "simplex") {
       .softmax_chain(g_theta, par, depth)
-    } else g_theta
+    } else {
+      g_theta
+    }
     if (any(!is.finite(g_par))) {
       return(list(value = PENALTY, grad = rep(0, n_par)))
     }
@@ -395,15 +410,18 @@ eml_fit <- function(x, y, depth = 3L,
   } else {
     NULL
   }
-  on.exit({
-    if (is.null(old_seed)) {
-      if (exists(".Random.seed", envir = .GlobalEnv)) {
-        rm(".Random.seed", envir = .GlobalEnv)
+  on.exit(
+    {
+      if (is.null(old_seed)) {
+        if (exists(".Random.seed", envir = .GlobalEnv)) {
+          rm(".Random.seed", envir = .GlobalEnv)
+        }
+      } else {
+        assign(".Random.seed", old_seed, envir = .GlobalEnv)
       }
-    } else {
-      assign(".Random.seed", old_seed, envir = .GlobalEnv)
-    }
-  }, add = TRUE)
+    },
+    add = TRUE
+  )
 
   best <- NULL
   n_run <- 0L
@@ -417,15 +435,19 @@ eml_fit <- function(x, y, depth = 3L,
       par0 <- rnorm(n_par, sd = 0.1)
     }
     fit <- tryCatch(
-      stats::optim(par0, fn, gr, method = method,
-                   control = list(maxit = maxit)),
+      stats::optim(par0, fn, gr,
+        method = method,
+        control = list(maxit = maxit)
+      ),
       error = function(e) NULL
     )
     # Fall back to method = "BFGS" (no bounds) if L-BFGS-B aborts.
     if (is.null(fit) && method == "L-BFGS-B") {
       fit <- tryCatch(
-        stats::optim(par0, fn, gr, method = "BFGS",
-                     control = list(maxit = maxit)),
+        stats::optim(par0, fn, gr,
+          method = "BFGS",
+          control = list(maxit = maxit)
+        ),
         error = function(e) NULL
       )
     }
@@ -442,14 +464,18 @@ eml_fit <- function(x, y, depth = 3L,
 
   bindings <- unpack_master_params(theta_par, depth)
   bindings_snap <- unpack_master_params(theta_par_snap, depth)
-  env_pred <- list2env(c(list(eml = eml), bindings,      list(x = x)),
-                       parent = baseenv())
+  env_pred <- list2env(c(list(eml = eml), bindings, list(x = x)),
+    parent = baseenv()
+  )
   env_snap <- list2env(c(list(eml = eml), bindings_snap, list(x = x)),
-                       parent = baseenv())
-  pred      <- tryCatch(Re(eval(master, env_pred)),
-                        error = function(e) rep(NA_real_, length(x)))
+    parent = baseenv()
+  )
+  pred <- tryCatch(Re(eval(master, env_pred)),
+    error = function(e) rep(NA_real_, length(x))
+  )
   pred_snap <- tryCatch(Re(eval(master, env_snap)),
-                        error = function(e) rep(NA_real_, length(x)))
+    error = function(e) rep(NA_real_, length(x))
+  )
   snap_mse <- if (all(is.finite(pred_snap))) mean((pred_snap - y)^2) else NA_real_
 
   list(

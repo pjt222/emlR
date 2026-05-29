@@ -28,6 +28,7 @@
 # put id:"ins_metrics", label:"Inspect: K, depth, RPN", node_type:"output", \
 #   input:"ast.internal"
 eml_K <- function(expr) {
+  expr <- .fold_signed_literal(expr)
   if (is_eml_const(expr) || is_eml_var(expr)) {
     return(1L)
   }
@@ -54,6 +55,7 @@ eml_K <- function(expr) {
 #' @seealso [eml_K()] for the paper's total node count.
 #' @export
 eml_leafcount <- function(expr) {
+  expr <- .fold_signed_literal(expr)
   if (is_eml_const(expr) || is_eml_var(expr)) {
     return(1L)
   }
@@ -79,6 +81,7 @@ eml_leafcount <- function(expr) {
 #' @family eml_inspectors
 #' @export
 eml_depth <- function(expr) {
+  expr <- .fold_signed_literal(expr)
   if (is_eml_const(expr) || is_eml_var(expr)) {
     return(0L)
   }
@@ -106,6 +109,7 @@ eml_depth <- function(expr) {
 #' @family eml_inspectors
 #' @export
 eml_rpn <- function(expr) {
+  expr <- .fold_signed_literal(expr)
   if (is_eml_const(expr)) {
     return(format(expr))
   }

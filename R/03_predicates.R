@@ -27,16 +27,35 @@ is_eml_expr <- function(x) {
   if (is_eml_call(x)) {
     return(is_eml_expr(x[[2L]]) && is_eml_expr(x[[3L]]))
   }
-  # Unary +/- wrappers: R's parser turns the source literal `-1`
-  # into call("-", 1), so an `eml(...)` argument written as `-1`
-  # arrives as a call, not a bare numeric. Treat unary +/- on an
-  # EML expression as an EML expression.
-  if (is.call(x) && length(x) == 2L &&
-    is.name(x[[1L]]) &&
-    as.character(x[[1L]]) %in% c("-", "+")) {
-    return(is_eml_expr(x[[2L]]))
+  # Unary +/- on a numeric/complex literal: R's parser turns the source
+  # literal `-1` into call("-", 1), so an `eml(...)` argument written as
+  # `-1` arrives as a call, not a bare numeric. Accept it only when the
+  # operand is a literal -- the documented case -- because such a node
+  # denotes the constant -1. Unary +/- on a name or sub-call (`-x`,
+  # `-eml(...)`) is not part of the EML grammar, so it is rejected here;
+  # this keeps is_eml_expr in agreement with the inspectors (eml_K,
+  # eml_depth, eml_rpn) and the compiler, which fold the signed literal
+  # back to its constant via .fold_signed_literal().
+  if (.is_signed_literal(x)) {
+    return(TRUE)
   }
   FALSE
+}
+
+# A unary +/- applied to a single numeric/complex literal -- the parse of
+# a source token like `-1` as call("-", 1). Denotes a constant and is
+# treated as one throughout (predicate, inspectors, compiler).
+.is_signed_literal <- function(x) {
+  is.call(x) && length(x) == 2L && is.name(x[[1L]]) &&
+    as.character(x[[1L]]) %in% c("-", "+") &&
+    is_eml_const(x[[2L]])
+}
+
+# Fold a signed literal to its numeric/complex value; pass anything else
+# through unchanged. Lets the inspectors and compiler treat `-1` exactly
+# as the constant -1 instead of crashing on the parser's call("-", 1).
+.fold_signed_literal <- function(x) {
+  if (.is_signed_literal(x)) eval(x) else x
 }
 
 #' Is the object an `eml(l, r)` call?

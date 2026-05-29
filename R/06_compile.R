@@ -61,9 +61,12 @@ compile_eml <- function(expr) {
   add_const <- function(v) {
     v <- as.complex(v)
     if (length(consts) > 0L) {
-      hit <- which(consts == v &
-        abs(Re(consts) - Re(v)) == 0 &
-        abs(Im(consts) - Im(v)) == 0)
+      # Complex `==` already requires both parts equal; the extra abs()
+      # clauses were redundant for finite values and broke Inf dedup
+      # (abs(Inf - Inf) = NaN, NaN == 0 = NA, dropping a true match).
+      # `which()` treats NA as no-match, so guard against a NaN literal.
+      eq <- consts == v
+      hit <- which(!is.na(eq) & eq)
       if (length(hit) > 0L) {
         return(hit[1L])
       }
@@ -90,6 +93,7 @@ compile_eml <- function(expr) {
   }
 
   walk <- function(e) {
+    e <- .fold_signed_literal(e)
     if (is_eml_const(e)) {
       emit(.OP_LIT, add_const(e))
     } else if (is_eml_var(e)) {

@@ -94,6 +94,19 @@ test_that("simplify_eml is idempotent", {
   }
 })
 
+test_that("simplify_eml is idempotent on every catalog entry", {
+  # Mirror the simplify_native idempotence sweep (test-identities.R) so the
+  # strict, SR-facing (I5) mode's idempotence is pinned on the deep
+  # compound trees (sin/cos/pi/i/div/pow), not just the four hand-picked
+  # inputs above.
+  catalog <- eml_catalog()
+  for (nm in names(catalog)) {
+    once <- simplify_eml(catalog[[nm]])
+    twice <- simplify_eml(once)
+    expect_identical(twice, once)
+  }
+})
+
 # --- 4c. simplify_native single rules ---------------------------------------
 
 test_that("N1: eml(_x, 1) -> exp(_x)", {
@@ -204,6 +217,35 @@ test_that("C-exp-const-plus-log refuses to lift exp(_C) when _C overflows", {
     eval(quote(exp(710 + log(x))), list(x = 1e-310)),
     tolerance = 1e-12
   )
+})
+
+test_that("log-combine is not applied to an exposed log difference (I3)", {
+  # tree_sub(tree_ln(a), tree_ln(b)) collapses to log(a) - log(b) with no
+  # enclosing exp. A bare log(a) - log(b) -> log(a / b) rewrite would lose
+  # 2*pi*i whenever arg(a) - arg(b) leaves (-pi, pi], silently disagreeing
+  # with eml_eval. The simplifier must leave the difference intact.
+  e <- tree_sub(tree_ln("a"), tree_ln("b"))
+  smp <- simplify_native(e)
+  expect_false(identical(smp, quote(log(a / b))))
+
+  # Each argument is individually in the principal range; only the joint
+  # arg(a) - arg(b) = 3*pi/2 leaves it, so the difference is the only safe
+  # form. simplify_native must agree with eml_eval here.
+  a <- exp(1i * 3 * pi / 4)
+  b <- exp(-1i * 3 * pi / 4)
+  expect_equal(
+    as.complex(eval(smp, list(a = a, b = b))),
+    eml_eval(e, list(a = a, b = b)),
+    tolerance = 1e-9
+  )
+})
+
+test_that("log-combine still collapses when wrapped by an absorbing exp", {
+  # tree_mul / tree_div reach x*y / x/y precisely because the log sum/diff
+  # sits inside an outer exp that discards the 2*pi*i ambiguity. That path
+  # must keep working after the exposed-difference fix above.
+  expect_identical(simplify_native(tree_mul("x", "y")), quote(x * y))
+  expect_identical(simplify_native(tree_div("x", "y")), quote(x / y))
 })
 
 test_that("matcher tolerance is opt-in: 1e-13 does not match literal 0", {

@@ -154,9 +154,12 @@ simplify_eml <- function(expr) {
   if (!is.call(expr)) {
     return(expr)
   }
-  # Pass non-EML calls through unchanged. (After the safe-heads guard
-  # above, these can only be exp/log/sqrt/arithmetic from re-applying
-  # the function to simplifier output.)
+  # Pass non-eml calls through verbatim. simplify_eml only folds and
+  # rewrites `eml` nodes; any user-supplied non-eml call (exp/log/sqrt/
+  # arithmetic, all permitted by the safe-heads guard above) is returned
+  # unchanged, including a closed one such as `exp(1)` -- it is deliberately
+  # NOT constant-folded here, since simplify_eml's contract is to stay
+  # inside the EML grammar, not to evaluate base-R arithmetic.
   if (!identical(expr[[1L]], as.name("eml"))) {
     return(expr)
   }
@@ -349,16 +352,58 @@ simplify_eml <- function(expr) {
       rhs = quote(-log(`_y`))
     ),
 
-    # log(_x) + log(_y) = log(_x * _y) and log(_x) - log(_y) = log(_x / _y)
+    # exp(log(_x) + log(_y)) = _x * _y  and  exp(log(_x) - log(_y)) = _x / _y.
+    #
+    # These deliberately require the *enclosing* exp. The bare rewrite
+    # log(a) +/- log(b) -> log(a*b or a/b) is NOT value-preserving on the
+    # complex principal branch: it holds only when arg(a) +/- arg(b) stays
+    # in (-pi, pi], and arg() is uncheckable for symbolic _x/_y at simplify
+    # time. With closed args .fold_constants collapses log(.) to a literal
+    # before any rule fires, so a bare rule could only ever match symbolic
+    # args -- exactly the unverifiable case. Composing the package's own
+    # constructors reaches it: tree_sub(tree_ln(a), tree_ln(b)) leaves
+    # log(a) - log(b) exposed at top level, where a bare C-log-quot would
+    # rewrite to log(a/b) and silently disagree with eml_eval by 2*pi*i.
+    #
+    # Wrapping the pattern in exp makes the rewrite exact regardless of
+    # branch: exp(log(x) +/- log(y)) = exp(log x) * / exp(log y)^-1 = x*y or
+    # x/y, because the outer exp discards the 2*pi*i ambiguity. C-exp-log
+    # only matches exp(log(_z)) (a single log), so it can never unwrap a
+    # sum/difference of logs first; these compound rules win. catalog
+    # tree_mul / tree_div reach x*y / x/y through here.
     list(
-      name = "C-log-prod",
-      lhs = quote(log(`_x`) + log(`_y`)),
-      rhs = quote(log(`_x` * `_y`))
+      name = "C-exp-log-prod",
+      lhs = quote(exp(log(`_x`) + log(`_y`))),
+      rhs = quote(`_x` * `_y`)
     ),
     list(
-      name = "C-log-quot",
-      lhs = quote(log(`_x`) - log(`_y`)),
-      rhs = quote(log(`_x` / `_y`))
+      name = "C-exp-log-quot",
+      lhs = quote(exp(log(`_x`) - log(`_y`))),
+      rhs = quote(`_x` / `_y`)
+    ),
+
+    # exp(log(_x) - _C) = _x / exp(_C) for a numeric/complex constant _C.
+    # The Euler trig forms divide by a *constant* (2i for sin, 2 for cos),
+    # and .fold_constants collapses log(2i)/log(2) to a literal before the
+    # log/log C-exp-log-quot rule above can bind log(_y) -- so without this
+    # rule sin/cos no longer reach their E1/E2 division shape. Sound on the
+    # principal branch: exp(log(x) - C) = exp(log x) exp(-C) = x exp(-C) =
+    # x / exp(C), exact because the outer exp absorbs any branch wrap. We
+    # emit the division (not x * exp(-C)) so the E1/E2 Euler patterns, which
+    # match `(...) / (0+2i)` and `(...) / 2`, still fire. Guards mirror
+    # C-exp-const-plus-log: _C must be a length-1 numeric/complex literal,
+    # and |Re(_C)| < 700 so exp(_C) neither overflows to Inf nor underflows
+    # to 0 (the unsimplified form can still evaluate by cancellation).
+    list(
+      name = "C-exp-log-minus-const",
+      lhs = quote(exp(log(`_x`) - `_C`)),
+      rhs = quote(`_x` / exp(`_C`)),
+      guard = function(b) {
+        v <- b[["_C"]]
+        is.atomic(v) && length(v) == 1L &&
+          (is.numeric(v) || is.complex(v)) &&
+          abs(Re(as.complex(v))) < 700
+      }
     ),
 
     # exp(_y * log(_x)) = _x ^ _y    — pow shortcut.

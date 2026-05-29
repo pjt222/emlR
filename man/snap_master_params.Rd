@@ -20,6 +20,12 @@ sets it to 1, the others to 0. Recovers the discrete grammar choice
 at every slot. After snapping, evaluating the master should reproduce
 the corresponding closed-form symbolic expression.
 }
+\details{
+This is meaningful only when \code{par} is a per-slot \strong{simplex} (the
+softmax output used by \code{\link[=eml_fit]{eml_fit()}} with \code{parameterization = "simplex"}), where the argmax corresponds to a grammar choice
+\verb{\{1, x, f\}}. Applied to raw continuous coefficients (\code{"direct"} mode)
+the argmax has no such interpretation.
+}
 \examples{
 theta <- theta_for_exp()
 snapped <- snap_master_params(theta, depth = 1)

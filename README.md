@@ -149,8 +149,8 @@ corresponding base-R primitive.
 
 ## Status
 
-Pre-release (0.1.0 in development). Targeting 0.1.0 as the first CRAN
-submission.
+Release candidate: 0.1.0, the first CRAN submission. The API and feature
+set for this release are frozen (see `NEWS.md`); not yet on CRAN.
 
 ## Scope and limitations
 

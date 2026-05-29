@@ -109,19 +109,23 @@ test_that("Deriv-based gradient agrees with FD at depth 2", {
 # --- 5d: snap_master_params is idempotent and one-hot ----------------------
 
 test_that("snap_master_params produces one-hot per slot", {
-  par <- c(
-    0.1, 0.7, 0.2, # slot 1 (inner): pick beta
-    0.3, 0.5, # slot 2 (leaf):  pick beta
-    0.9, 0.1
-  ) # slot 3 (leaf):  pick alpha
-  # depth 2 has 6 slots, length 14. Build a longer one with a clear winner per slot.
+  # depth 2 has 6 slots, length 14, with a clear winner per slot.
   set.seed(42)
   par <- runif(master_n_params(2), 0.1, 1.0)
   snapped <- snap_master_params(par, 2)
   expect_equal(length(snapped), length(par))
-  # Should sum to slots(2) = 6 (one '1' per slot)
-  # slots(d) = 2^(d+1) - 2 = 6 for d=2
-  expect_equal(sum(snapped), 6)
+
+  # Assert one-hot *per slot*, not just sum == 6: a degenerate snap with
+  # two 1s in one slot and none in another would also sum to 6. depth-2
+  # DFS slot sizes: inner(3), leaf(2), leaf(2), inner(3), leaf(2), leaf(2).
+  slot_sizes <- c(3L, 2L, 2L, 3L, 2L, 2L)
+  ends <- cumsum(slot_sizes)
+  starts <- c(1L, ends[-length(ends)] + 1L)
+  for (i in seq_along(slot_sizes)) {
+    seg <- snapped[starts[i]:ends[i]]
+    expect_equal(sum(seg == 1), 1L)
+    expect_equal(sum(seg == 0), slot_sizes[i] - 1L)
+  }
 
   # Idempotence
   expect_equal(snap_master_params(snapped, 2), snapped)

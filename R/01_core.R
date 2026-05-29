@@ -26,8 +26,9 @@ eml <- function(x, y) {
 
 #' Real-valued EML, with imaginary-residue check
 #'
-#' Convenience wrapper: returns `Re(eml(x, y))` after asserting that the
-#' imaginary residue is below `tol`. Set `tol = NA` to skip the check.
+#' Convenience wrapper: returns `Re(eml(x, y))`, warning if the imaginary
+#' residue exceeds `tol` (the real part is still returned). Set
+#' `tol = NA` to skip the check.
 #'
 #' @param x,y numeric or complex.
 #' @param tol numeric tolerance for the imaginary residue, or `NA` to

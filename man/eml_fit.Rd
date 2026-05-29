@@ -30,7 +30,10 @@ softmax; the paper's choice) or \code{"direct"} (raw scaling).}
 \item{maxit}{maximum optimiser iterations.}
 
 \item{n_restarts}{number of independent random restarts; the best is
-returned.}
+returned. "Best" is the smallest \strong{continuous} final loss — for
+exact symbolic recovery this coincides with the snapping vertex when
+the global optimum sits at a grammar vertex (as it does for the
+paper's \code{exp}/\code{log} targets); it is not selected on \code{snap_mse}.}
 
 \item{seed}{RNG seed for reproducibility (each restart shifts it by 1).}
 }

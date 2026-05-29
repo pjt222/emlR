@@ -12,8 +12,8 @@
 #' result is length N.
 #'
 #' By default the result is complex (the principal-branch domain of
-#' EML). Set `real = TRUE` to return `Re(z)` after asserting the
-#' imaginary residue is below `tol`.
+#' EML). Set `real = TRUE` to return `Re(z)`, warning if the imaginary
+#' residue exceeds `tol` (the real part is still returned).
 #'
 #' @param expr an EML expression.
 #' @param vars named list of variable bindings, e.g. `list(x = 2)`.

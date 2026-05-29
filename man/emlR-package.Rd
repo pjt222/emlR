@@ -2,8 +2,8 @@
 % Please edit documentation in R/00_imports.R
 \docType{package}
 \name{emlR-package}
-\alias{emlR-package}
 \alias{emlR}
+\alias{emlR-package}
 \title{emlR: All Elementary Functions From a Single Binary Operator}
 \description{
 R implementation of the EML (Exp-Minus-Log) Sheffer operator
@@ -14,8 +14,8 @@ branch).
 }
 \section{Architecture}{
 
-EML expressions in v2 are native R \code{call} objects, not a custom S3
-class. This buys free interop with \link[base:deparse]{base::deparse}, \link[base:bquote]{base::bquote},
+EML expressions are native R \code{call} objects, not a custom S3 class.
+This buys free interop with \link[base:deparse]{base::deparse}, \link[base:bquote]{base::bquote},
 \link[base:allnames]{base::all.vars}, \link[base:eval]{base::eval}, and \link[Deriv:Deriv]{Deriv::Deriv}.
 
 Key entry points:

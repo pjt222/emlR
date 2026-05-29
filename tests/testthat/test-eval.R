@@ -59,6 +59,14 @@ test_that("eml_eval extended-real semantics: -1 from eml(-Inf, e)", {
   expect_equal(Re(z), -1, tolerance = 1e-12)
 })
 
+test_that("eml_eval extended-real semantics: log(0) = -Inf gives +Inf", {
+  # Complement of the exp(-Inf) direction above (I4): the log(0) = -Inf
+  # branch. eml(1, 0) = exp(1) - log(0) = e - (-Inf) = +Inf; likewise
+  # eml(0, 0). These are TESTS.md T1 cases that were otherwise unasserted.
+  expect_equal(Re(eml_eval(quote(eml(1, 0)))), Inf)
+  expect_equal(Re(eml_eval(quote(eml(0, 0)))), Inf)
+})
+
 test_that("eml_eval rejects non-list vars", {
   expect_error(eml_eval(quote(eml(x, 1)), vars = c(x = 1)), "named list")
 })

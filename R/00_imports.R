@@ -7,8 +7,8 @@
 #' branch).
 #'
 #' @section Architecture:
-#' EML expressions in v2 are native R `call` objects, not a custom S3
-#' class. This buys free interop with [base::deparse], [base::bquote],
+#' EML expressions are native R `call` objects, not a custom S3 class.
+#' This buys free interop with [base::deparse], [base::bquote],
 #' [base::all.vars], [base::eval], and [Deriv::Deriv].
 #'
 #' Key entry points:
@@ -21,9 +21,7 @@
 #'   \item [eml_fit()] — symbolic regression via the master formula
 #' }
 #'
-#' @docType package
 #' @name emlR-package
-#' @aliases emlR
 #' @importFrom Deriv Deriv
 #' @importFrom stats optim rnorm
 "_PACKAGE"

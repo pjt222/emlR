@@ -27,8 +27,8 @@ result is length N.
 }
 \details{
 By default the result is complex (the principal-branch domain of
-EML). Set \code{real = TRUE} to return \code{Re(z)} after asserting the
-imaginary residue is below \code{tol}.
+EML). Set \code{real = TRUE} to return \code{Re(z)}, warning if the imaginary
+residue exceeds \code{tol} (the real part is still returned).
 }
 \examples{
 # exp(2)

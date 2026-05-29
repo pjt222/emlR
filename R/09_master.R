@@ -28,8 +28,21 @@
 #' @family eml_master
 #' @export
 master_n_params <- function(depth) {
-  if (depth < 1L) stop("master_n_params: depth must be >= 1.")
-  as.integer(5L * 2L^as.integer(depth) - 6L)
+  depth <- .check_depth(depth, "master_n_params")
+  as.integer(5L * 2L^depth - 6L)
+}
+
+# Validate depth as a whole number >= 1 and return it as an integer.
+# Both master_n_params and build_master must reject fractional depths:
+# as.integer() truncation in the former and the strict `== 0L` base case
+# in the latter's recursion disagree on a value like 2.7 (one truncates,
+# the other infinite-recurses to a stack overflow). Fail fast and clearly.
+.check_depth <- function(depth, fn) {
+  if (length(depth) != 1L || !is.numeric(depth) || is.na(depth) ||
+    depth < 1L || depth != as.integer(depth)) {
+    stop(fn, ": depth must be a whole number >= 1.")
+  }
+  as.integer(depth)
 }
 
 #' Build a depth-n master-formula expression
@@ -52,7 +65,7 @@ master_n_params <- function(depth) {
 # put id:"mas_build", label:"build_master (depth-n formula)", \
 #   node_type:"process", output:"master_formula.internal"
 build_master <- function(depth, var_name = "x") {
-  if (depth < 1L) stop("build_master: depth must be >= 1.")
+  depth <- .check_depth(depth, "build_master")
   slot_idx <- 0L
   x_sym <- as.name(var_name)
 
@@ -223,6 +236,14 @@ theta_for_log <- function() {
 
 # Compute symbolic gradient expressions (one per parameter) for an
 # expanded master expression. Cached per (expanded_expr, par_names).
+#
+# Domain note: the expanded form uses real-arithmetic exp/log, so these
+# gradients are valid only where every log-operand is positive. The loss
+# itself evaluates through the complex `eml` operator and stays finite on
+# the principal branch even when an operand goes negative; at such points
+# the gradient is non-finite and eml_fit's loss_and_grad treats it as a
+# PENALTY barrier (constant value, zero gradient) that the line search is
+# repelled from. Multi-restart absorbs any restarts that begin there.
 .master_grad_exprs <- function(expanded_expr, par_names) {
   lapply(par_names, function(p) Deriv::Deriv(expanded_expr, p))
 }
@@ -235,6 +256,12 @@ theta_for_log <- function() {
 #' sets it to 1, the others to 0. Recovers the discrete grammar choice
 #' at every slot. After snapping, evaluating the master should reproduce
 #' the corresponding closed-form symbolic expression.
+#'
+#' This is meaningful only when `par` is a per-slot **simplex** (the
+#' softmax output used by [eml_fit()] with `parameterization =
+#' "simplex"`), where the argmax corresponds to a grammar choice
+#' `{1, x, f}`. Applied to raw continuous coefficients (`"direct"` mode)
+#' the argmax has no such interpretation.
 #'
 #' @param par numeric vector of length `master_n_params(depth)`.
 #' @param depth integer >= 1.
@@ -313,7 +340,10 @@ snap_master_params <- function(par, depth) {
 #' @param method `optim` method; defaults to `"L-BFGS-B"`.
 #' @param maxit maximum optimiser iterations.
 #' @param n_restarts number of independent random restarts; the best is
-#'   returned.
+#'   returned. "Best" is the smallest **continuous** final loss — for
+#'   exact symbolic recovery this coincides with the snapping vertex when
+#'   the global optimum sits at a grammar vertex (as it does for the
+#'   paper's `exp`/`log` targets); it is not selected on `snap_mse`.
 #' @param seed RNG seed for reproducibility (each restart shifts it by 1).
 #' @return List with `par`, `theta`, `theta_snap`, `pred`, `pred_snap`,
 #'   `final_value`, `snap_mse`, `n_restarts_run`, `best_seed`.
@@ -340,6 +370,28 @@ eml_fit <- function(x, y, depth = 3L,
                     method = "L-BFGS-B", maxit = 1000L,
                     n_restarts = 1L, seed = 42L) {
   parameterization <- match.arg(parameterization)
+  if (!is.numeric(x) || !is.numeric(y)) {
+    stop("eml_fit: `x` and `y` must be numeric vectors.")
+  }
+  if (length(x) != length(y)) {
+    stop(sprintf(
+      "eml_fit: length(x) (%d) must equal length(y) (%d).",
+      length(x), length(y)
+    ))
+  }
+  # Snapping picks the argmax of each (alpha, beta[, gamma]) slot, which
+  # corresponds to a grammar choice {1, x, f} only under the simplex
+  # parameterization (where the slot is a softmax simplex). In "direct"
+  # mode the optimum is an arbitrary continuous mixture, so theta_snap /
+  # snap_mse are not a reliable symbolic-recovery signal. Warn rather
+  # than silently report a meaningless metric.
+  if (parameterization == "direct") {
+    warning(
+      "eml_fit: theta_snap and snap_mse are only meaningful under ",
+      "parameterization = \"simplex\"; in \"direct\" mode the argmax ",
+      "snap does not correspond to a grammar choice."
+    )
+  }
   n_par <- master_n_params(depth)
 
   master <- build_master(depth, var_name = "x")
@@ -429,8 +481,11 @@ eml_fit <- function(x, y, depth = 3L,
     n_run <- n_run + 1L
     set.seed(seed + k - 1L)
     par0 <- rnorm(n_par, sd = 0.5)
-    # Guard: if the starting point is non-finite, skip to a small jitter
-    # rather than letting L-BFGS-B abort.
+    # Guard: if the starting point is non-finite, re-jitter to a smaller
+    # scale rather than letting L-BFGS-B abort. A finite PENALTY-wall
+    # start is deliberately kept -- optim escapes it and can still
+    # converge to a grammar vertex, and re-jittering known-good recovery
+    # seeds would change their trajectory.
     if (!is.finite(fn(par0))) {
       par0 <- rnorm(n_par, sd = 0.1)
     }

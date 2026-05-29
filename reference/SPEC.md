@@ -120,7 +120,10 @@ constructions are correct (the headline test: `simplify_native` of
 
 ### 3.2 Rewrite rules — `simplify_eml`
 
-Applied bottom-up, repeatedly to a fixed point.
+As shipped, `simplify_eml` is a single recursive pass that constant-folds
+any `eml` subtree with no free variables and otherwise recurses into the
+children; it is idempotent by construction. (This corrects the original
+"applied bottom-up to a fixed point" phrasing — see `ADR-002`.)
 
 | Rule | Pattern                              | Result           | Justification |
 |------|--------------------------------------|------------------|---------------|
@@ -135,7 +138,19 @@ preserving them.
 
 ### 3.3 Rewrite rules — `simplify_native`
 
-Applied bottom-up, repeatedly to a fixed point. Each rule is a pattern
+> **Normative correction (see `ADR-002`).** The shipped simplifier applies
+> rules **top-down** to a fixed point, **not** bottom-up. Bottom-up is
+> unsound for invariant I2: on the sacred `log` form
+> `eml(1, eml(eml(1, x), 1))`, a bottom-up pass fires N1
+> (`eml(_x, 1) -> exp(_x)`) on the inner subtree `eml(eml(1, x), 1)` before
+> N3 can match the whole, yielding `exp(...)` instead of `log(x)`. The
+> as-shipped rule set is also larger than the N1–N7 table below: N3 is
+> tried before N1, an `N5b` rule is added, and an algebraic-cleanup layer
+> (the `C-*` rules, including the Euler `E1`/`E2` and the principal-branch
+> log-combine guards) runs after the EML rules. The table below is the
+> original design sketch; `R/07_simplify.R` is authoritative.
+
+Each rule is a pattern
 match on `call` objects. Patterns use a meta-syntax: `_x` matches anything,
 `_n` matches a literal number, identical-named meta-vars must bind to
 identical sub-expressions.
@@ -155,9 +170,9 @@ After applying these, run constant folding once more. Idempotence: prove
 by case analysis that no rule produces a pattern matchable by any other
 rule applied to its sub-expressions.
 
-**Open question for the implementer:** N4 and N7 overlap when both `_x =
-log(...)` and `_y` is wrapped in `exp(...)`. Choose N4 (preferred form
-gets subtraction directly). Document the choice in the simplifier source.
+**Resolved.** N4 and N7 overlap when both `_x = log(...)` and `_y` is
+wrapped in `exp(...)`. N4 wins (preferred form gets subtraction directly):
+in the shipped `.native_rules()` N4 precedes N7. See `R/07_simplify.R`.
 
 ### 3.4 Pattern matching primitive
 

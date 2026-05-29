@@ -194,14 +194,16 @@ expect_setequal(all.vars(m),
 ## T12. Master formula selectors
 
 ```r
-# Selector for exp(x) at depth 1
-par_exp <- selector_for_exp()      # returns named list of param values
+# Selector for exp(x) at depth 1. As shipped the selectors are named
+# theta_for_exp() / theta_for_log() and return a FLAT numeric vector
+# (length master_n_params(depth)), unpacked via unpack_master_params().
+par_exp <- unpack_master_params(theta_for_exp(), 1)
 expr <- build_master(1)
 val <- eml_eval(expr, c(par_exp, list(x = 2)))
 expect_equal(Re(val), exp(2), tolerance = 1e-10)
 
 # Selector for log(x) at depth 3 (paper Eq. 5 wired into master)
-par_log <- selector_for_log()
+par_log <- unpack_master_params(theta_for_log(), 3)
 expr <- build_master(3)
 val <- eml_eval(expr, c(par_log, list(x = 5)))
 expect_equal(Re(val), log(5), tolerance = 1e-10)

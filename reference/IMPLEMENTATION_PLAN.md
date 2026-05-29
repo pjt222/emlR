@@ -212,7 +212,9 @@ Tests: applied to `eml(1, 1)` returns numeric `e`. Applied to
 
 ### 4c. `simplify_native` core rules
 
-Rules N1-N7 from SPEC §3.3, applied bottom-up to fixed point.
+Rules from SPEC §3.3, applied **top-down** to a fixed point (bottom-up
+breaks invariant I2 — see SPEC §3.3 note and `ADR-002`). The shipped set
+extends N1–N7 with `N5b` and a `C-*` algebraic-cleanup layer.
 
 Tests, one per rule:
 - N1: `simplify_native(quote(eml(x, 1)))` → `quote(exp(x))`

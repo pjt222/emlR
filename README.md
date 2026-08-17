@@ -5,6 +5,7 @@
 [![pkgdown](https://github.com/pjt222/emlR/actions/workflows/pkgdown.yaml/badge.svg)](https://pjt222.github.io/emlR/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![arXiv](https://img.shields.io/badge/arXiv-2603.21852-b31b1b.svg)](https://arxiv.org/abs/2603.21852)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/pjt222/emlR)
 <!-- badges: end -->
 
 > *Three for the constants under the unit sky,*
